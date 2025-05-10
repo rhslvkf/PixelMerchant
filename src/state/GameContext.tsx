@@ -79,6 +79,7 @@ const initialGameState: GameState = {
 // 액션 타입 정의
 type GameAction =
   | { type: "START_NEW_GAME"; payload: { playerName: string } }
+  | { type: "LOAD_GAME"; payload: { gameState: GameState } }
   | { type: "TRAVEL_TO_CITY"; payload: { cityId: string; travelDays: number } }
   | { type: "UPDATE_GOLD"; payload: { amount: number } }
   | { type: "UPDATE_SETTINGS"; payload: { settings: Partial<GameSettings> } }
@@ -97,15 +98,31 @@ type GameAction =
 // 리듀서 함수
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
-    case "START_NEW_GAME":
+    case "START_NEW_GAME": {
+      const { playerName } = action.payload;
+
       return {
         ...initialGameState,
         player: {
           ...initialGameState.player,
           id: Date.now().toString(),
-          name: action.payload.playerName,
+          name: playerName,
+          gold: 500,
+          inventory: [], // 기본 인벤토리는 비어있음
+          skills: {
+            [SkillType.TRADE]: 1,
+            [SkillType.LOGISTICS]: 1,
+            [SkillType.INSIGHT]: 1,
+            [SkillType.DIPLOMACY]: 1,
+            [SkillType.EXPLORATION]: 1,
+          },
         },
       };
+    }
+
+    case "LOAD_GAME": {
+      return action.payload.gameState;
+    }
 
     case "TRAVEL_TO_CITY":
       // 도시 이동 및 날짜 진행 로직

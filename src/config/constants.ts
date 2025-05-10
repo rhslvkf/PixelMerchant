@@ -14,6 +14,8 @@ export const DEFAULT_SETTINGS = {
 export enum SCREENS {
   SPLASH = "Splash",
   HOME = "Home",
+  CHARACTER_CREATION = "CharacterCreation",
+  TUTORIAL = "Tutorial",
   CITY = "City",
   MARKET = "Market",
   TRAVEL = "Travel",

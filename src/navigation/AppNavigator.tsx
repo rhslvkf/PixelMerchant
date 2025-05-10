@@ -3,9 +3,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { SCREENS } from "../config/constants";
 
-// 임시 스크린 컴포넌트 (나중에 실제 컴포넌트로 교체)
+// 화면 임포트
 import SplashScreen from "../screens/SplashScreen";
 import HomeScreen from "../screens/HomeScreen";
+import CharacterCreationScreen from "../screens/CharacterCreationScreen";
 
 const Stack = createStackNavigator();
 
@@ -15,7 +16,7 @@ const AppNavigator = () => {
       <Stack.Navigator initialRouteName={SCREENS.SPLASH} screenOptions={{ headerShown: false }}>
         <Stack.Screen name={SCREENS.SPLASH} component={SplashScreen} />
         <Stack.Screen name={SCREENS.HOME} component={HomeScreen} />
-        {/* 추후 다른 스크린 추가 */}
+        <Stack.Screen name={SCREENS.CHARACTER_CREATION} component={CharacterCreationScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
