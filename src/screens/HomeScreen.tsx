@@ -86,13 +86,13 @@ const HomeScreen = () => {
 
   return (
     <ImageBackground
-      source={require("../assets/images/home_background.png")}
+      source={require("../assets/images/home_background.webp")}
       style={styles.container}
       resizeMode="cover"
     >
       <Animated.View style={[styles.overlay, { opacity: fadeIn }]}>
         <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
-          <Image source={require("../assets/images/game_logo.png")} style={styles.logo} resizeMode="contain" />
+          <Image source={require("../assets/images/game_logo.webp")} style={styles.logo} resizeMode="contain" />
         </Animated.View>
 
         <View style={styles.buttonContainer}>
