@@ -1,9 +1,22 @@
 import { Item, ItemCategory, Season } from "../models/types";
 
+export const ITEM_KEYS = {
+  WHEAT: "wheat",
+  COTTON: "cotton",
+  IRON_ORE: "iron_ore",
+  SILK: "silk",
+  SPICES: "spices",
+  WINE: "wine",
+  GEMSTONES: "gemstones",
+  LEATHER: "leather",
+  POTTERY: "pottery",
+  HERBS: "herbs",
+} as const;
+
 // 기본 상품 데이터
 export const ITEMS: Record<string, Item> = {
-  wheat: {
-    id: "wheat",
+  [ITEM_KEYS.WHEAT]: {
+    id: ITEM_KEYS.WHEAT,
     name: "밀",
     description: "기본적인 곡물로 빵과 다양한 음식의 재료가 됩니다.",
     category: ItemCategory.AGRICULTURAL,
@@ -24,8 +37,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.2,
     },
   },
-  cotton: {
-    id: "cotton",
+  [ITEM_KEYS.COTTON]: {
+    id: ITEM_KEYS.COTTON,
     name: "목화",
     description: "부드럽고 가벼운 천을 만들기 위한 기본 재료입니다.",
     category: ItemCategory.TEXTILE,
@@ -46,8 +59,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.1,
     },
   },
-  iron_ore: {
-    id: "iron_ore",
+  [ITEM_KEYS.IRON_ORE]: {
+    id: ITEM_KEYS.IRON_ORE,
     name: "철광석",
     description: "무기와 도구를 만드는 핵심 재료입니다.",
     category: ItemCategory.MINERAL,
@@ -68,8 +81,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.1,
     },
   },
-  silk: {
-    id: "silk",
+  [ITEM_KEYS.SILK]: {
+    id: ITEM_KEYS.SILK,
     name: "비단",
     description: "고급스럽고 부드러운 직물로, 귀족들이 선호합니다.",
     category: ItemCategory.TEXTILE,
@@ -90,8 +103,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.1,
     },
   },
-  spices: {
-    id: "spices",
+  [ITEM_KEYS.SPICES]: {
+    id: ITEM_KEYS.SPICES,
     name: "향신료",
     description: "음식에 맛과 향을 더하는 희귀한 향신료입니다.",
     category: ItemCategory.SPICE,
@@ -112,8 +125,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.2,
     },
   },
-  wine: {
-    id: "wine",
+  [ITEM_KEYS.WINE]: {
+    id: ITEM_KEYS.WINE,
     name: "포도주",
     description: "상류층이 즐기는 고급 음료입니다.",
     category: ItemCategory.BEVERAGE,
@@ -134,8 +147,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.1,
     },
   },
-  gemstones: {
-    id: "gemstones",
+  [ITEM_KEYS.GEMSTONES]: {
+    id: ITEM_KEYS.GEMSTONES,
     name: "보석",
     description: "다양한 귀중한 보석들입니다. 장신구와 예술품에 사용됩니다.",
     category: ItemCategory.JEWELRY,
@@ -156,8 +169,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0,
     },
   },
-  leather: {
-    id: "leather",
+  [ITEM_KEYS.LEATHER]: {
+    id: ITEM_KEYS.LEATHER,
     name: "가죽",
     description: "갑옷, 의류, 다양한 용품을 만드는 데 사용되는 재료입니다.",
     category: ItemCategory.TEXTILE,
@@ -178,8 +191,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.2,
     },
   },
-  pottery: {
-    id: "pottery",
+  [ITEM_KEYS.POTTERY]: {
+    id: ITEM_KEYS.POTTERY,
     name: "도자기",
     description: "실용적이면서도 예술적인 가치가 있는 그릇과 용기입니다.",
     category: ItemCategory.ART,
@@ -200,8 +213,8 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0,
     },
   },
-  herbs: {
-    id: "herbs",
+  [ITEM_KEYS.HERBS]: {
+    id: ITEM_KEYS.HERBS,
     name: "약초",
     description: "약과 연고를 만드는 데 사용되는 다양한 약초입니다.",
     category: ItemCategory.MEDICINE,

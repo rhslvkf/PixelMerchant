@@ -1,5 +1,5 @@
 import { City, Region, Market, TransportType, Season } from "../models/types";
-import { ITEMS } from "./items";
+import { ITEMS, ITEM_KEYS } from "./items";
 
 // 지역 데이터
 export const REGIONS: Record<string, Region> = {
@@ -92,8 +92,8 @@ export const CITIES: Record<string, City> = {
     description: "베르단 제국의 주요 무역항입니다. 황금빛 항구와 웅장한 상선들이 특징입니다.",
     size: 4,
     wealthLevel: 5,
-    specialties: ["silk", "wine"],
-    market: createInitialMarket("golden_harbor", ["silk", "wine"]),
+    specialties: [ITEM_KEYS.SILK, ITEM_KEYS.WINE],
+    market: createInitialMarket("golden_harbor", [ITEM_KEYS.SILK, ITEM_KEYS.WINE]),
     travelConnections: [
       {
         destinationId: "royal_market",
@@ -108,6 +108,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.SHIP],
       },
     ],
+    backgroundImage: "golden_harbor_bg",
   },
   royal_market: {
     id: "royal_market",
@@ -116,8 +117,8 @@ export const CITIES: Record<string, City> = {
     description: "제국 수도의 중심지로, 사치품과 예술품이 거래됩니다.",
     size: 5,
     wealthLevel: 5,
-    specialties: ["gemstones", "pottery"],
-    market: createInitialMarket("royal_market", ["gemstones", "pottery"]),
+    specialties: [ITEM_KEYS.GEMSTONES, ITEM_KEYS.POTTERY],
+    market: createInitialMarket("royal_market", [ITEM_KEYS.GEMSTONES, ITEM_KEYS.POTTERY]),
     travelConnections: [
       {
         destinationId: "golden_harbor",
@@ -132,6 +133,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "royal_market_bg",
   },
   silver_tide: {
     id: "silver_tide",
@@ -140,8 +142,8 @@ export const CITIES: Record<string, City> = {
     description: "은광으로 유명한 항구 도시입니다. 상인들의 천국이라 불립니다.",
     size: 3,
     wealthLevel: 4,
-    specialties: ["iron_ore", "cotton"],
-    market: createInitialMarket("silver_tide", ["iron_ore", "cotton"]),
+    specialties: [ITEM_KEYS.IRON_ORE, ITEM_KEYS.COTTON],
+    market: createInitialMarket("silver_tide", [ITEM_KEYS.IRON_ORE, ITEM_KEYS.COTTON]),
     travelConnections: [
       {
         destinationId: "golden_harbor",
@@ -162,6 +164,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "silver_tide_bg",
   },
   mistwood: {
     id: "mistwood",
@@ -170,8 +173,8 @@ export const CITIES: Record<string, City> = {
     description: "안개가 자욱한 숲 속의 도시로, 희귀한 약초와 목재가 특산품입니다.",
     size: 2,
     wealthLevel: 3,
-    specialties: ["herbs", "leather"],
-    market: createInitialMarket("mistwood", ["herbs", "leather"]),
+    specialties: [ITEM_KEYS.HERBS, ITEM_KEYS.LEATHER],
+    market: createInitialMarket("mistwood", [ITEM_KEYS.HERBS, ITEM_KEYS.LEATHER]),
     travelConnections: [
       {
         destinationId: "silver_tide",
@@ -186,6 +189,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "mistwood_bg",
   },
   iron_peak: {
     id: "iron_peak",
@@ -194,8 +198,8 @@ export const CITIES: Record<string, City> = {
     description: "산맥 깊은 곳의 광산 도시로, 고품질 금속과 보석이 생산됩니다.",
     size: 3,
     wealthLevel: 3,
-    specialties: ["iron_ore", "gemstones"],
-    market: createInitialMarket("iron_peak", ["iron_ore", "gemstones"]),
+    specialties: [ITEM_KEYS.IRON_ORE, ITEM_KEYS.GEMSTONES],
+    market: createInitialMarket("iron_peak", [ITEM_KEYS.IRON_ORE, ITEM_KEYS.GEMSTONES]),
     travelConnections: [
       {
         destinationId: "royal_market",
@@ -216,6 +220,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "iron_peak_bg",
   },
   stone_gate: {
     id: "stone_gate",
@@ -224,8 +229,8 @@ export const CITIES: Record<string, City> = {
     description: "산맥을 지키는 요새 도시로, 뛰어난 무기와 방어구가 생산됩니다.",
     size: 2,
     wealthLevel: 2,
-    specialties: ["iron_ore", "leather"],
-    market: createInitialMarket("stone_gate", ["iron_ore", "leather"]),
+    specialties: [ITEM_KEYS.IRON_ORE, ITEM_KEYS.LEATHER],
+    market: createInitialMarket("stone_gate", [ITEM_KEYS.IRON_ORE, ITEM_KEYS.LEATHER]),
     travelConnections: [
       {
         destinationId: "iron_peak",
@@ -246,6 +251,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "stone_gate_bg",
   },
   sunset_oasis: {
     id: "sunset_oasis",
@@ -254,8 +260,8 @@ export const CITIES: Record<string, City> = {
     description: "사막 중앙의 오아시스 도시로, 희귀한 향신료와 염료가 거래됩니다.",
     size: 3,
     wealthLevel: 4,
-    specialties: ["spices", "herbs"],
-    market: createInitialMarket("sunset_oasis", ["spices", "herbs"]),
+    specialties: [ITEM_KEYS.SPICES, ITEM_KEYS.HERBS],
+    market: createInitialMarket("sunset_oasis", [ITEM_KEYS.SPICES, ITEM_KEYS.HERBS]),
     travelConnections: [
       {
         destinationId: "stone_gate",
@@ -270,6 +276,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "sunset_oasis_bg",
   },
   red_dune: {
     id: "red_dune",
@@ -278,8 +285,8 @@ export const CITIES: Record<string, City> = {
     description: "사막 깊숙한 곳의 비밀 도시로, 신비한 아이템과 지식이 숨겨져 있습니다.",
     size: 2,
     wealthLevel: 3,
-    specialties: ["spices", "gemstones"],
-    market: createInitialMarket("red_dune", ["spices", "gemstones"]),
+    specialties: [ITEM_KEYS.SPICES, ITEM_KEYS.GEMSTONES],
+    market: createInitialMarket("red_dune", [ITEM_KEYS.SPICES, ITEM_KEYS.GEMSTONES]),
     travelConnections: [
       {
         destinationId: "sunset_oasis",
@@ -288,6 +295,7 @@ export const CITIES: Record<string, City> = {
         transportOptions: [TransportType.FOOT, TransportType.CART],
       },
     ],
+    backgroundImage: "red_dune_bg",
   },
 };
 

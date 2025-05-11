@@ -126,6 +126,7 @@ export interface City {
   specialties: string[]; // 특산품 ID 목록
   market: Market;
   travelConnections: TravelConnection[];
+  backgroundImage?: string; // 배경 이미지 경로 (옵션)
 }
 
 export interface TravelConnection {
