@@ -1,13 +1,14 @@
-import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import React from "react";
 import { SCREENS } from "../config/constants";
 
 // 화면 임포트
-import SplashScreen from "../screens/SplashScreen";
-import HomeScreen from "../screens/HomeScreen";
 import CharacterCreationScreen from "../screens/CharacterCreationScreen";
 import CityScreen from "../screens/CityScreen";
+import HomeScreen from "../screens/HomeScreen";
+import MarketScreen from "../screens/MarketScreen";
+import SplashScreen from "../screens/SplashScreen";
 
 const Stack = createStackNavigator();
 
@@ -19,6 +20,7 @@ const AppNavigator = () => {
         <Stack.Screen name={SCREENS.HOME} component={HomeScreen} />
         <Stack.Screen name={SCREENS.CHARACTER_CREATION} component={CharacterCreationScreen} />
         <Stack.Screen name={SCREENS.CITY} component={CityScreen} />
+        <Stack.Screen name={SCREENS.MARKET} component={MarketScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
