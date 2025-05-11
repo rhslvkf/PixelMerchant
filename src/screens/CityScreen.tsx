@@ -4,6 +4,7 @@ import { ImageBackground, ScrollView, StyleSheet, TouchableOpacity, View } from 
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import PixelText from "../components/PixelText";
+import TravelModal from "../components/TravelModal";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { CITY_IMAGES } from "../data/CityImages";
 import { ITEMS } from "../data/items";
@@ -11,7 +12,6 @@ import { formatDate, getSeasonName } from "../logic/DateSystem";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 import { getCultureName } from "../utils/localization";
-import TravelModal from "../components/TravelModal";
 
 const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -141,34 +141,6 @@ const CityScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* {showTravelOptions ? (
-            <View style={styles.travelOptionsContainer}>
-              <PixelText style={styles.sectionTitle}>여행 가능 도시</PixelText>
-              {connectedCities.map((item, index) => (
-                <View key={index} style={styles.travelDestination}>
-                  <View style={styles.destinationInfo}>
-                    <PixelText style={styles.destinationName}>{item.city.name}</PixelText>
-                    <PixelText variant="caption">
-                      거리: {item.connection.distance} • 위험도: {getRatingText(item.connection.dangerLevel)}
-                    </PixelText>
-                  </View>
-                  <Button
-                    title="여행"
-                    size="small"
-                    onPress={() => navigation.navigate("Travel", { destination: item.city.id })}
-                  />
-                </View>
-              ))}
-              <Button
-                title="취소"
-                type="secondary"
-                size="medium"
-                onPress={toggleTravelOptions}
-                style={styles.closeButton}
-              />
-            </View>
-          ) : null} */}
         </ScrollView>
 
         <View style={styles.footer}>

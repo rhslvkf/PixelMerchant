@@ -1,13 +1,14 @@
-import React, { useState } from "react";
-import { View, StyleSheet, TextInput, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
+import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS, SPACING, TYPOGRAPHY } from "../config/theme";
-import PixelText from "../components/PixelText";
 import Button from "../components/Button";
+import PixelText from "../components/PixelText";
 import { SCREENS } from "../config/constants";
-import { useGame } from "../state/GameContext";
+import { COLORS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { SkillType } from "../models/types";
+import { AppNavigationProp } from "../navigation/types";
+import { useGame } from "../state/GameContext";
 
 // 스킬 타입을 한글로 매핑하는 객체
 const skillTypeToKorean = {
@@ -19,7 +20,7 @@ const skillTypeToKorean = {
 };
 
 const CharacterCreationScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<AppNavigationProp>();
   const { dispatch } = useGame();
   const [playerName, setPlayerName] = useState("");
   const [selectedBackground, setSelectedBackground] = useState<string>("merchant");
@@ -71,8 +72,8 @@ const CharacterCreationScreen = () => {
       },
     });
 
-    // 시작 도시로 이동
-    navigation.navigate(SCREENS.CITY as never);
+    // 시작 도시로 이동 - 타입 캐스팅 제거하고 문자열 직접 사용
+    navigation.navigate("City");
   };
 
   return (
