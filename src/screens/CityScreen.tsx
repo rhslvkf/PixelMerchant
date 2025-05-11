@@ -11,11 +11,13 @@ import { formatDate, getSeasonName } from "../logic/DateSystem";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 import { getCultureName } from "../utils/localization";
+import TravelModal from "../components/TravelModal";
 
 const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const { state, dispatch } = useGame();
   const [showTravelOptions, setShowTravelOptions] = useState(false);
+  const [showTravelModal, setShowTravelModal] = useState(false);
 
   // 현재 도시 정보 가져오기
   const currentCity = state.world.cities[state.currentCityId];
@@ -30,6 +32,11 @@ const CityScreen = () => {
     connection: conn,
     city: state.world.cities[conn.destinationId],
   }));
+
+  // 여행 모달 표시/숨김 토글 함수
+  const toggleTravelModal = () => {
+    setShowTravelModal(!showTravelModal);
+  };
 
   // 도시 배경 이미지 가져오기
   const getCityBackgroundImage = () => {
@@ -135,7 +142,7 @@ const CityScreen = () => {
             </View>
           </View>
 
-          {showTravelOptions ? (
+          {/* {showTravelOptions ? (
             <View style={styles.travelOptionsContainer}>
               <PixelText style={styles.sectionTitle}>여행 가능 도시</PixelText>
               {connectedCities.map((item, index) => (
@@ -161,15 +168,17 @@ const CityScreen = () => {
                 style={styles.closeButton}
               />
             </View>
-          ) : null}
+          ) : null} */}
         </ScrollView>
 
         <View style={styles.footer}>
           <Button title="인벤토리" size="medium" type="secondary" onPress={goToInventory} style={styles.footerButton} />
-          <Button title="여행" size="medium" onPress={toggleTravelOptions} style={styles.footerButton} />
+          <Button title="여행" size="medium" onPress={toggleTravelModal} style={styles.footerButton} />
           <Button title="캐릭터" size="medium" type="secondary" onPress={goToCharacter} style={styles.footerButton} />
         </View>
       </ImageBackground>
+
+      <TravelModal visible={showTravelModal} onClose={toggleTravelModal} destinations={connectedCities} />
     </SafeAreaView>
   );
 };
