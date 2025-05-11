@@ -1,5 +1,5 @@
 import { GameState } from "../../models/types";
-import { updateCityMarket, applyPlayerTradeImpact } from "../../logic/EconomySystem";
+import { updateCityMarket, applyPlayerTradeImpact, calculatePlayerSellingPrice } from "../../logic/EconomySystem";
 import { calculateInventoryWeight } from "../../logic/InventorySystem";
 import { ITEMS } from "../../data/items";
 import { addItemToInventory, removeItemFromInventory } from "../utils/inventoryUtils";
@@ -113,7 +113,16 @@ export function sellItemReducer(state: GameState, itemId: string, quantity: numb
 
   // 아이템의 현재 가격 찾기
   const marketItem = city.market.items.find((item) => item.itemId === itemId);
-  const sellPrice = marketItem ? marketItem.currentPrice : inventoryItem.purchasePrice * 0.7; // 해당 도시에 없는 상품은 할인 판매
+
+  // 판매 가격 계산
+  let sellPrice;
+  if (marketItem) {
+    // 시장에 있는 아이템은 스프레드 적용 가격
+    sellPrice = calculatePlayerSellingPrice(marketItem.currentPrice, state.player, city);
+  } else {
+    // 시장에 없는 아이템은 구매가의 70%로 판매
+    sellPrice = inventoryItem.purchasePrice * 0.7;
+  }
 
   const totalSellValue = sellPrice * quantity;
 

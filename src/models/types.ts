@@ -310,3 +310,9 @@ export interface MarketEvent {
   duration: number; // 지속 기간(일)
   startDate: GameDate; // 시작 날짜
 }
+
+// 화폐 관련 타입
+export interface Currency {
+  gold: number;
+  silver: number;
+}

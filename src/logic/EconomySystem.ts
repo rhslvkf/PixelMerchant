@@ -1,4 +1,4 @@
-import { Item, MarketItem, City, GameDate, Season, Market } from "../models/types";
+import { Item, MarketItem, City, GameDate, Season, Market, Player } from "../models/types";
 
 /**
  * 상품 가격 계산 함수
@@ -178,4 +178,31 @@ export function applyPlayerTradeImpact(market: Market, itemId: string, quantity:
   updatedMarket.items[itemIndex] = updatedItem;
 
   return updatedMarket;
+}
+
+/**
+ * 플레이어 판매 가격 계산 함수
+ *
+ * @param marketPrice - 아이템의 현재 시장 가격
+ * @param player - 플레이어 정보
+ * @param city - 도시 정보
+ * @returns - 플레이어가 받을 판매 가격 (소수점 포함)
+ */
+export function calculatePlayerSellingPrice(marketPrice: number, player: Player, city: City): number {
+  // 기본 스프레드 비율 (기본 20%)
+  let spreadPercentage = 20;
+
+  // 평판에 따른 스프레드 감소
+  const reputationLevel = player.reputation[city.id] || 0;
+  spreadPercentage -= reputationLevel * 2;
+
+  // 거래 기술에 따른 스프레드 감소
+  const tradeSkillLevel = player.skills.trade || 0;
+  spreadPercentage -= tradeSkillLevel * 1;
+
+  // 최소 스프레드 적용 (최소 5%)
+  spreadPercentage = Math.max(5, spreadPercentage);
+
+  // 최종 판매 가격 계산 (시장가의 [100-스프레드]%) - 소수점 유지
+  return (marketPrice * (100 - spreadPercentage)) / 100;
 }

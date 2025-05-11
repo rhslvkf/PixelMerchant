@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ImageBackground, ScrollView, TouchableOpacity, Text, Alert, Modal } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { COLORS, SPACING, BORDERS, SHADOWS, TYPOGRAPHY } from "../config/theme";
-import PixelText from "../components/PixelText";
+import React, { useEffect, useState } from "react";
+import { Image, ImageBackground, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
-import { useGame } from "../state/GameContext";
+import PixelText from "../components/PixelText";
+import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { ITEMS } from "../data/items";
+import { calculatePlayerSellingPrice } from "../logic/EconomySystem";
 import { MarketItem } from "../models/types";
-import { formatGold } from "../utils/formatting";
 import { AppNavigationProp } from "../navigation/types";
+import { useGame } from "../state/GameContext";
+import { formatGoldWithSilver } from "../state/utils/currency";
+import { formatGold } from "../utils/formatting";
 
 const MarketScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -135,7 +137,7 @@ const MarketScreen = () => {
       const inventoryItem = state.player.inventory.find((item) => item.itemId === selectedItem);
 
       if (marketItem) {
-        return marketItem.currentPrice * quantity;
+        return calculatePlayerSellingPrice(marketItem.currentPrice, state.player, currentCity) * quantity;
       } else if (inventoryItem) {
         return inventoryItem.purchasePrice * 0.7 * quantity;
       }
@@ -172,8 +174,8 @@ const MarketScreen = () => {
           </View>
         </View>
         <View style={styles.itemPriceContainer}>
-          <PixelText style={styles.itemPrice}>{formatGold(item.currentPrice)}</PixelText>
-          <PixelText variant="caption">골드</PixelText>
+          <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+          <PixelText style={styles.itemPrice}>{item.currentPrice}</PixelText>
         </View>
       </TouchableOpacity>
     );
@@ -188,7 +190,15 @@ const MarketScreen = () => {
 
     // 현재 시장의 판매 가격 찾기
     const marketItem = marketItems.find((item) => item.itemId === inventoryItem.itemId);
-    const sellPrice = marketItem ? marketItem.currentPrice : inventoryItem.purchasePrice * 0.7; // 시장에 없는 아이템은 70% 가격으로 판매
+    let sellPrice;
+
+    if (marketItem) {
+      // 시장에 있는 아이템은 스프레드 적용 가격
+      sellPrice = calculatePlayerSellingPrice(marketItem.currentPrice, state.player, currentCity);
+    } else {
+      // 시장에 없는 아이템은 구매가의 70%로 판매
+      sellPrice = inventoryItem.purchasePrice * 0.7;
+    }
 
     return (
       <TouchableOpacity
@@ -212,11 +222,41 @@ const MarketScreen = () => {
           </View>
         </View>
         <View style={styles.itemPriceContainer}>
-          <PixelText style={styles.itemPrice}>{formatGold(sellPrice)}</PixelText>
-          <PixelText variant="caption">골드</PixelText>
+          {Math.floor(sellPrice) > 0 && (
+            <View style={styles.currencyItem}>
+              <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+              <PixelText style={styles.goldText}>{Math.floor(sellPrice)}</PixelText>
+            </View>
+          )}
+          {Math.floor((sellPrice % 1) * 100) > 0 && (
+            <View style={styles.currencyItem}>
+              <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
+              <PixelText style={styles.silverText}>{Math.floor((sellPrice % 1) * 100)}</PixelText>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
+  };
+
+  // 현재 판매 수수료 비율 계산
+  const calculateFeePercentage = () => {
+    // 기본 수수료 20%에서 평판 및 거래 기술 효과 차감
+    const reputationEffect = getReputationEffect();
+    const tradeSkillEffect = getTradeSkillEffect();
+    return Math.max(5, 20 - reputationEffect - tradeSkillEffect);
+  };
+
+  // 평판에 따른 수수료 감소 효과
+  const getReputationEffect = () => {
+    const reputationLevel = state.player.reputation[currentCity.id] || 0;
+    return reputationLevel * 2;
+  };
+
+  // 거래 기술에 따른 수수료 감소 효과
+  const getTradeSkillEffect = () => {
+    const tradeSkillLevel = state.player.skills.trade || 0;
+    return tradeSkillLevel * 1;
   };
 
   return (
@@ -229,10 +269,15 @@ const MarketScreen = () => {
         {/* 헤더 */}
         <View style={styles.header}>
           <PixelText variant="subtitle">{currentCity.name} 시장</PixelText>
-          <View style={styles.goldInfo}>
-            <PixelText>
-              <PixelText style={styles.goldText}>{formatGold(state.player.gold)}</PixelText> 골드
-            </PixelText>
+          <View style={styles.currencyContainer}>
+            <View style={styles.currencyItem}>
+              <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+              <PixelText style={styles.goldText}>{Math.floor(state.player.gold)}</PixelText>
+            </View>
+            <View style={styles.currencyItem}>
+              <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
+              <PixelText style={styles.silverText}>{Math.floor((state.player.gold % 1) * 100)}</PixelText>
+            </View>
           </View>
         </View>
 
@@ -351,9 +396,52 @@ const MarketScreen = () => {
                   )}
 
                   <View style={modalStyles.tradeSummary}>
-                    <PixelText variant="body" style={modalStyles.priceText}>
-                      총 가치: {formatGold(calculateTotalValue())} 골드
-                    </PixelText>
+                    <View style={modalStyles.priceContainer}>
+                      <PixelText variant="body" style={modalStyles.priceText}>
+                        총 가치:
+                      </PixelText>
+                      <View style={modalStyles.coinValueContainer}>
+                        {Math.floor(calculateTotalValue()) > 0 && (
+                          <View style={styles.currencyItem}>
+                            <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+                            <PixelText style={styles.goldText}>{Math.floor(calculateTotalValue())}</PixelText>
+                          </View>
+                        )}
+                        {Math.floor((calculateTotalValue() % 1) * 100) > 0 && (
+                          <View style={styles.currencyItem}>
+                            <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
+                            <PixelText style={styles.silverText}>
+                              {Math.floor((calculateTotalValue() % 1) * 100)}
+                            </PixelText>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    {selectedTab === "sell" && marketItems.find((item) => item.itemId === selectedItem) && (
+                      <View style={modalStyles.priceInfoContainer}>
+                        <PixelText variant="caption" style={modalStyles.priceInfoText}>
+                          기본 판매수수료: 20%
+                        </PixelText>
+                        <PixelText
+                          variant="caption"
+                          style={getReputationEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
+                        >
+                          평판 보너스: -{getReputationEffect()}%
+                        </PixelText>
+                        <PixelText
+                          variant="caption"
+                          style={getTradeSkillEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
+                        >
+                          거래 기술 보너스: -{getTradeSkillEffect()}%
+                        </PixelText>
+                        <PixelText
+                          variant="caption"
+                          style={{ ...modalStyles.priceInfoText, ...modalStyles.finalFeeText }}
+                        >
+                          최종 수수료: {calculateFeePercentage()}%
+                        </PixelText>
+                      </View>
+                    )}
                   </View>
 
                   <View style={modalStyles.actionButtons}>
@@ -491,6 +579,42 @@ const modalStyles = StyleSheet.create({
   },
   tradeButton: {
     flex: 1,
+  },
+  priceInfoContainer: {
+    marginTop: SPACING.xs,
+    marginBottom: SPACING.sm,
+    padding: SPACING.xs,
+    backgroundColor: `${COLORS.background.dark}80`,
+    borderRadius: BORDERS.radius.sm,
+  },
+  priceInfoText: {
+    textAlign: "center",
+    marginVertical: 2,
+  },
+  bonusText: {
+    color: COLORS.success,
+    textAlign: "center",
+    marginVertical: 2,
+  },
+  normalText: {
+    textAlign: "center",
+    marginVertical: 2,
+    color: COLORS.text.light,
+  },
+  finalFeeText: {
+    fontWeight: "bold",
+    marginTop: SPACING.xs,
+    color: COLORS.info,
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  coinValueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: SPACING.xs,
   },
 });
 
@@ -797,10 +921,6 @@ const styles = StyleSheet.create({
   goldInfo: {
     alignItems: "flex-end",
   },
-  goldText: {
-    color: COLORS.primary,
-    fontWeight: "bold",
-  },
   tabContainer: {
     flexDirection: "row",
     marginHorizontal: SPACING.lg,
@@ -867,6 +987,7 @@ const styles = StyleSheet.create({
   itemPriceContainer: {
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
     padding: SPACING.sm,
     backgroundColor: `${COLORS.background.dark}99`,
     borderRadius: BORDERS.radius.sm,
@@ -885,6 +1006,28 @@ const styles = StyleSheet.create({
     zIndex: 5,
     borderTopWidth: 1,
     borderTopColor: COLORS.primary,
+  },
+  currencyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  currencyItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: SPACING.sm,
+  },
+  coinIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 4,
+  },
+  goldText: {
+    color: COLORS.gold,
+    fontWeight: "bold",
+  },
+  silverText: {
+    color: COLORS.silver,
+    fontWeight: "bold",
   },
 });
 
