@@ -76,7 +76,7 @@ const CityScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ImageBackground source={getCityBackgroundImage()} style={styles.background}>
+      <ImageBackground source={getCityBackgroundImage()} style={styles.background} imageStyle={styles.backgroundImage}>
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
             <PixelText variant="subtitle" style={styles.cityName}>
@@ -100,11 +100,11 @@ const CityScreen = () => {
           </View>
 
           <View style={styles.infoContainer}>
-            <View style={styles.infoItem}>
+            <View style={[styles.infoItem, { borderRightWidth: 1 }]}>
               <PixelText style={styles.infoLabel}>규모</PixelText>
               <PixelText>{formatRating(currentCity.size)}</PixelText>
             </View>
-            <View style={styles.infoItem}>
+            <View style={[styles.infoItem, { borderRightWidth: 1 }]}>
               <PixelText style={styles.infoLabel}>부유함</PixelText>
               <PixelText>{formatRating(currentCity.wealthLevel)}</PixelText>
             </View>
@@ -166,13 +166,16 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  backgroundImage: {
+    opacity: 0.7,
+  },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: `${COLORS.background.dark}CC`,
+    backgroundColor: `${COLORS.background.dark}B3`,
   },
   headerLeft: {
     flex: 2,
@@ -193,7 +196,7 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
   },
   descriptionContainer: {
-    backgroundColor: `${COLORS.background.dark}CC`,
+    backgroundColor: `${COLORS.background.dark}B3`,
     borderRadius: BORDERS.radius.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -204,8 +207,8 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: `${COLORS.background.dark}CC`,
+    justifyContent: "center",
+    backgroundColor: `${COLORS.background.dark}B3`,
     borderRadius: BORDERS.radius.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -213,13 +216,16 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     alignItems: "center",
+    flex: 1,
+    paddingHorizontal: SPACING.sm,
+    borderRightColor: COLORS.primary,
   },
   infoLabel: {
     marginBottom: SPACING.xs,
     color: COLORS.info,
   },
   specialtiesContainer: {
-    backgroundColor: `${COLORS.background.dark}CC`,
+    backgroundColor: `${COLORS.background.dark}B3`,
     borderRadius: BORDERS.radius.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -245,7 +251,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   placesContainer: {
-    backgroundColor: `${COLORS.background.dark}CC`,
+    backgroundColor: `${COLORS.background.dark}B3`,
     borderRadius: BORDERS.radius.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
