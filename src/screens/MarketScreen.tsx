@@ -21,6 +21,12 @@ const MarketScreen = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailItem, setDetailItem] = useState<string | null>(null);
 
+  // 알림 다이얼로그 상태
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogType, setDialogType] = useState<"success" | "error">("success");
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogMessage, setDialogMessage] = useState("");
+
   // 현재 도시 및 시장 정보 가져오기
   const currentCity = state.world.cities[state.currentCityId];
   const marketItems = currentCity.market.items;
@@ -30,6 +36,14 @@ const MarketScreen = () => {
     setSelectedItem(null);
     setQuantity(1);
   }, [selectedTab]);
+
+  // 다이얼로그 표시 함수
+  const showNotification = (type: "success" | "error", title: string, message: string) => {
+    setDialogType(type);
+    setDialogTitle(title);
+    setDialogMessage(message);
+    setShowDialog(true);
+  };
 
   // 수량 증가
   const increaseQuantity = () => {
@@ -63,7 +77,7 @@ const MarketScreen = () => {
     // 골드 확인
     const totalCost = marketItem.currentPrice * quantity;
     if (state.player.gold < totalCost) {
-      Alert.alert("구매 실패", "골드가 부족합니다.");
+      showNotification("error", "구매 실패", "골드가 부족합니다.");
       return;
     }
 
@@ -78,7 +92,7 @@ const MarketScreen = () => {
       },
     });
 
-    Alert.alert("구매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 구매했습니다.`);
+    showNotification("success", "구매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 구매했습니다.`);
     setSelectedItem(null);
     setQuantity(1);
   };
@@ -100,7 +114,7 @@ const MarketScreen = () => {
       },
     });
 
-    Alert.alert("판매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 판매했습니다.`);
+    showNotification("success", "판매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 판매했습니다.`);
     setSelectedItem(null);
     setQuantity(1);
   };
@@ -363,6 +377,15 @@ const MarketScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* 알림 다이얼로그 */}
+      <NotificationDialog
+        visible={showDialog}
+        type={dialogType}
+        title={dialogTitle}
+        message={dialogMessage}
+        onClose={() => setShowDialog(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -650,6 +673,102 @@ const itemModalStyles = StyleSheet.create({
   },
   closeButton: {
     marginTop: SPACING.md,
+  },
+});
+
+// 알림 다이얼로그 컴포넌트
+const NotificationDialog = ({
+  visible,
+  type,
+  title,
+  message,
+  onClose,
+}: {
+  visible: boolean;
+  type: "success" | "error";
+  title: string;
+  message: string;
+  onClose: () => void;
+}) => {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={notificationStyles.overlay}>
+        <View style={notificationStyles.container}>
+          <View
+            style={[
+              notificationStyles.iconContainer,
+              { backgroundColor: type === "success" ? COLORS.berdan : COLORS.danger },
+            ]}
+          >
+            <PixelText variant="subtitle" style={notificationStyles.iconText}>
+              {type === "success" ? "✓" : "✗"}
+            </PixelText>
+          </View>
+
+          <PixelText
+            variant="subtitle"
+            style={{
+              ...notificationStyles.title,
+              color: type === "success" ? COLORS.berdan : COLORS.danger,
+            }}
+          >
+            {title}
+          </PixelText>
+
+          <PixelText style={notificationStyles.message}>{message}</PixelText>
+
+          <Button
+            title="확인"
+            onPress={onClose}
+            type={type === "success" ? "primary" : "secondary"}
+            style={notificationStyles.button}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+// 알림 다이얼로그 스타일
+const notificationStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    width: "80%",
+    backgroundColor: COLORS.background.dark,
+    borderRadius: BORDERS.radius.md,
+    padding: SPACING.lg,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    ...SHADOWS.medium,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: SPACING.md,
+  },
+  iconText: {
+    color: COLORS.text.light,
+    fontSize: 30,
+  },
+  title: {
+    marginBottom: SPACING.sm,
+    textAlign: "center",
+  },
+  message: {
+    textAlign: "center",
+    marginBottom: SPACING.lg,
+  },
+  button: {
+    minWidth: 120,
   },
 });
 
