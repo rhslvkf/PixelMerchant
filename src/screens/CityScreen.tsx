@@ -14,10 +14,49 @@ import { useGame } from "../state/GameContext";
 import { getCultureName } from "../utils/localization";
 import { formatRating } from "../utils/formatting";
 
+// 공통 컨테이너 스타일을 위한 상수
+const CONTAINER_BACKGROUND = `${COLORS.background.dark}B3`;
+
+// 도시 정보 항목 컴포넌트
+interface InfoItemProps {
+  label: string;
+  value: string;
+  hasBorder?: boolean;
+}
+
+const InfoItem = ({ label, value, hasBorder = false }: InfoItemProps) => (
+  <View style={[styles.infoItem, hasBorder ? { borderRightWidth: 1 } : {}]}>
+    <PixelText style={styles.infoLabel}>{label}</PixelText>
+    <PixelText>{value}</PixelText>
+  </View>
+);
+
+// 특산품 항목 컴포넌트
+interface SpecialtyItemProps {
+  itemId: string;
+}
+
+const SpecialtyItem = ({ itemId }: SpecialtyItemProps) => (
+  <View style={styles.specialtyItem}>
+    <PixelText>{ITEMS[itemId]?.name || itemId}</PixelText>
+  </View>
+);
+
+// 장소 버튼 컴포넌트
+interface PlaceButtonProps {
+  name: string;
+  onPress?: () => void;
+}
+
+const PlaceButton = ({ name, onPress }: PlaceButtonProps) => (
+  <TouchableOpacity style={styles.placeButton} onPress={onPress}>
+    <PixelText>{name}</PixelText>
+  </TouchableOpacity>
+);
+
 const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const { state, dispatch } = useGame();
-  const [showTravelOptions, setShowTravelOptions] = useState(false);
   const [showTravelModal, setShowTravelModal] = useState(false);
 
   // 현재 도시 정보 가져오기
@@ -34,49 +73,32 @@ const CityScreen = () => {
     city: state.world.cities[conn.destinationId],
   }));
 
-  // 여행 모달 표시/숨김 토글 함수
-  const toggleTravelModal = () => {
-    setShowTravelModal(!showTravelModal);
-  };
-
-  // 도시 배경 이미지 가져오기
-  const getCityBackgroundImage = () => {
-    // 도시별 배경 이미지가 설정되어 있으면 해당 이미지 사용
-    if (currentCity.backgroundImage && CITY_IMAGES[currentCity.backgroundImage]) {
-      return CITY_IMAGES[currentCity.backgroundImage];
-    }
-    // 배경 이미지 설정이 없거나 매핑되지 않은 이미지면 기본 이미지 사용
-    return CITY_IMAGES.default_city_bg;
-  };
-
   // 도시 진입 시 시장 업데이트
   useEffect(() => {
     dispatch({
       type: "UPDATE_MARKET",
       payload: { cityId: state.currentCityId },
     });
-  }, [state.currentCityId]);
+  }, [state.currentCityId, dispatch]);
 
-  // 장소로 이동하는 함수들
-  const goToMarket = () => {
-    navigation.navigate("Market");
+  // 도시 배경 이미지 가져오기
+  const getCityBackgroundImage = () => {
+    return currentCity.backgroundImage && CITY_IMAGES[currentCity.backgroundImage]
+      ? CITY_IMAGES[currentCity.backgroundImage]
+      : CITY_IMAGES.default_city_bg;
   };
 
-  const goToInventory = () => {
-    navigation.navigate("Inventory");
-  };
+  // 이벤트 핸들러들
+  const toggleTravelModal = () => setShowTravelModal(!showTravelModal);
+  const goToMarket = () => navigation.navigate("Market");
+  const goToInventory = () => navigation.navigate("Inventory");
+  const goToCharacter = () => navigation.navigate("Character");
 
-  const goToCharacter = () => {
-    navigation.navigate("Character");
-  };
-
-  const toggleTravelOptions = () => {
-    setShowTravelOptions(!showTravelOptions);
-  };
-
+  // UI 렌더링
   return (
     <SafeAreaView style={styles.safeArea}>
       <ImageBackground source={getCityBackgroundImage()} style={styles.background} imageStyle={styles.backgroundImage}>
+        {/* 헤더 섹션 */}
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
             <PixelText variant="subtitle" style={styles.cityName}>
@@ -94,33 +116,23 @@ const CityScreen = () => {
           </View>
         </View>
 
+        {/* 컨텐츠 섹션 */}
         <ScrollView style={styles.contentContainer}>
           <View style={styles.descriptionContainer}>
             <PixelText style={styles.descriptionText}>{currentCity.description}</PixelText>
           </View>
 
           <View style={styles.infoContainer}>
-            <View style={[styles.infoItem, { borderRightWidth: 1 }]}>
-              <PixelText style={styles.infoLabel}>규모</PixelText>
-              <PixelText>{formatRating(currentCity.size)}</PixelText>
-            </View>
-            <View style={[styles.infoItem, { borderRightWidth: 1 }]}>
-              <PixelText style={styles.infoLabel}>부유함</PixelText>
-              <PixelText>{formatRating(currentCity.wealthLevel)}</PixelText>
-            </View>
-            <View style={styles.infoItem}>
-              <PixelText style={styles.infoLabel}>문화</PixelText>
-              <PixelText>{getCultureName(currentRegion.culture)}</PixelText>
-            </View>
+            <InfoItem label="규모" value={formatRating(currentCity.size)} hasBorder />
+            <InfoItem label="부유함" value={formatRating(currentCity.wealthLevel)} hasBorder />
+            <InfoItem label="문화" value={getCultureName(currentRegion.culture)} />
           </View>
 
           <View style={styles.specialtiesContainer}>
             <PixelText style={styles.sectionTitle}>특산품</PixelText>
             <View style={styles.specialtiesList}>
               {currentCity.specialties.map((itemId, index) => (
-                <View key={index} style={styles.specialtyItem}>
-                  <PixelText>{ITEMS[itemId]?.name || itemId}</PixelText>
-                </View>
+                <SpecialtyItem key={index} itemId={itemId} />
               ))}
             </View>
           </View>
@@ -128,22 +140,15 @@ const CityScreen = () => {
           <View style={styles.placesContainer}>
             <PixelText style={styles.sectionTitle}>이용 가능 장소</PixelText>
             <View style={styles.placesGrid}>
-              <TouchableOpacity style={styles.placeButton} onPress={goToMarket}>
-                <PixelText>시장</PixelText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.placeButton}>
-                <PixelText>여관</PixelText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.placeButton}>
-                <PixelText>길드</PixelText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.placeButton}>
-                <PixelText>항구</PixelText>
-              </TouchableOpacity>
+              <PlaceButton name="시장" onPress={goToMarket} />
+              <PlaceButton name="여관" />
+              <PlaceButton name="길드" />
+              <PlaceButton name="항구" />
             </View>
           </View>
         </ScrollView>
 
+        {/* 푸터 섹션 */}
         <View style={styles.footer}>
           <Button title="인벤토리" size="medium" type="secondary" onPress={goToInventory} style={styles.footerButton} />
           <Button title="여행" size="medium" onPress={toggleTravelModal} style={styles.footerButton} />
@@ -154,6 +159,15 @@ const CityScreen = () => {
       <TravelModal visible={showTravelModal} onClose={toggleTravelModal} destinations={connectedCities} />
     </SafeAreaView>
   );
+};
+
+// 공통 스타일 속성 추출
+const containerStyle = {
+  backgroundColor: CONTAINER_BACKGROUND,
+  borderRadius: BORDERS.radius.md,
+  padding: SPACING.md,
+  marginBottom: SPACING.md,
+  ...SHADOWS.medium,
 };
 
 const styles = StyleSheet.create({
@@ -175,7 +189,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: `${COLORS.background.dark}B3`,
+    backgroundColor: CONTAINER_BACKGROUND,
   },
   headerLeft: {
     flex: 2,
@@ -196,23 +210,15 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
   },
   descriptionContainer: {
-    backgroundColor: `${COLORS.background.dark}B3`,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.medium,
+    ...containerStyle,
   },
   descriptionText: {
     lineHeight: 20,
   },
   infoContainer: {
+    ...containerStyle,
     flexDirection: "row",
     justifyContent: "center",
-    backgroundColor: `${COLORS.background.dark}B3`,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.medium,
   },
   infoItem: {
     alignItems: "center",
@@ -225,11 +231,7 @@ const styles = StyleSheet.create({
     color: COLORS.info,
   },
   specialtiesContainer: {
-    backgroundColor: `${COLORS.background.dark}B3`,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.medium,
+    ...containerStyle,
   },
   sectionTitle: {
     fontSize: TYPOGRAPHY.fontSize.lg,
@@ -251,11 +253,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   placesContainer: {
-    backgroundColor: `${COLORS.background.dark}B3`,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.medium,
+    ...containerStyle,
   },
   placesGrid: {
     flexDirection: "row",
@@ -272,34 +270,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: SPACING.sm,
     ...SHADOWS.light,
-  },
-  travelOptionsContainer: {
-    backgroundColor: `${COLORS.background.dark}E0`,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.medium,
-  },
-  travelDestination: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: COLORS.secondary,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.berdan,
-  },
-  destinationInfo: {
-    flex: 1,
-  },
-  destinationName: {
-    fontWeight: "bold",
-    marginBottom: SPACING.xs,
-  },
-  closeButton: {
-    marginTop: SPACING.sm,
   },
   footer: {
     flexDirection: "row",

@@ -2,32 +2,17 @@ import React from "react";
 import { Text, TextStyle, StyleSheet } from "react-native";
 import { COLORS, TYPOGRAPHY } from "../config/theme";
 
+type TextVariant = "title" | "subtitle" | "body" | "caption";
+
 interface PixelTextProps {
   children: React.ReactNode;
   style?: TextStyle;
-  variant?: "title" | "subtitle" | "body" | "caption";
+  variant?: TextVariant;
   color?: string;
 }
 
-const PixelText = ({ children, style, variant = "body", color }: PixelTextProps) => {
-  // 변형에 따른 스타일
-  const getVariantStyle = () => {
-    switch (variant) {
-      case "title":
-        return styles.title;
-      case "subtitle":
-        return styles.subtitle;
-      case "body":
-        return styles.body;
-      case "caption":
-        return styles.caption;
-    }
-  };
-
-  return <Text style={[getVariantStyle(), color ? { color } : {}, style]}>{children}</Text>;
-};
-
-const styles = StyleSheet.create({
+// 변형별 스타일 매핑 객체
+const VARIANT_STYLES: Record<TextVariant, TextStyle> = {
   title: {
     fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: TYPOGRAPHY.fontWeight.bold,
@@ -47,6 +32,12 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.disabled,
   },
-});
+};
+
+const PixelText = ({ children, style, variant = "body", color }: PixelTextProps) => {
+  const textStyle = [VARIANT_STYLES[variant], color ? { color } : undefined, style].filter(Boolean) as TextStyle[];
+
+  return <Text style={textStyle}>{children}</Text>;
+};
 
 export default PixelText;

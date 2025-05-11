@@ -6,9 +6,14 @@ import Button from "./Button";
 import PixelText from "./PixelText";
 import { City, TravelConnection } from "../models/types";
 import { AppNavigationProp } from "../navigation/types";
-import { REGIONS } from "../data/cities"; // REGIONS 데이터 임포트
-import { getTransportName } from "../utils/localization"; // 추가된 유틸리티 함수 임포트
+import { REGIONS } from "../data/cities";
+import { getTransportName } from "../utils/localization";
 import { formatRating } from "../utils/formatting";
+
+// 상수 추출
+const MODAL_BACKGROUND_OPACITY = 0.7;
+const MODAL_WIDTH_PERCENTAGE = "90%";
+const MODAL_MAX_HEIGHT_PERCENTAGE = "80%";
 
 interface TravelDestination {
   city: City;
@@ -20,6 +25,42 @@ interface TravelModalProps {
   onClose: () => void;
   destinations: TravelDestination[];
 }
+
+// 도시 정보 표시 서브 컴포넌트
+interface DestinationCardProps {
+  destination: TravelDestination;
+  onTravel: (destinationId: string) => void;
+}
+
+const DestinationCard = ({ destination, onTravel }: DestinationCardProps) => (
+  <View style={styles.travelDestination}>
+    <View style={styles.destinationInfo}>
+      <PixelText style={styles.destinationName}>{destination.city.name}</PixelText>
+
+      <PixelText variant="caption" style={styles.destinationRegion}>
+        {REGIONS[destination.city.regionId]?.name || destination.city.regionId}
+      </PixelText>
+
+      <View style={styles.cityStats}>
+        <PixelText variant="caption">규모: {formatRating(destination.city.size)}</PixelText>
+        <PixelText variant="caption" style={styles.wealthStat}>
+          부유함: {formatRating(destination.city.wealthLevel)}
+        </PixelText>
+      </View>
+
+      <View style={styles.destinationDetails}>
+        <PixelText variant="caption">
+          거리: {destination.connection.distance} • 위험도: {formatRating(destination.connection.dangerLevel)}
+        </PixelText>
+
+        <PixelText variant="caption">
+          이동 수단: {destination.connection.transportOptions.map(getTransportName).join(", ")}
+        </PixelText>
+      </View>
+    </View>
+    <Button title="여행" size="small" onPress={() => onTravel(destination.city.id)} />
+  </View>
+);
 
 const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -39,36 +80,7 @@ const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
 
           <ScrollView style={styles.destinationList}>
             {destinations.map((item, index) => (
-              <View key={index} style={styles.travelDestination}>
-                <View style={styles.destinationInfo}>
-                  <PixelText style={styles.destinationName}>{item.city.name}</PixelText>
-
-                  {/* regionId 대신 REGIONS에서 name 사용 */}
-                  <PixelText variant="caption" style={styles.destinationRegion}>
-                    {REGIONS[item.city.regionId]?.name || item.city.regionId}
-                  </PixelText>
-
-                  {/* 도시 규모와 부유함 추가 */}
-                  <View style={styles.cityStats}>
-                    <PixelText variant="caption">규모: {formatRating(item.city.size)}</PixelText>
-                    <PixelText variant="caption" style={styles.wealthStat}>
-                      부유함: {formatRating(item.city.wealthLevel)}
-                    </PixelText>
-                  </View>
-
-                  <View style={styles.destinationDetails}>
-                    <PixelText variant="caption">
-                      거리: {item.connection.distance} • 위험도: {formatRating(item.connection.dangerLevel)}
-                    </PixelText>
-
-                    {/* 이동 수단을 한국어로 표시 */}
-                    <PixelText variant="caption">
-                      이동 수단: {item.connection.transportOptions.map((t) => getTransportName(t)).join(", ")}
-                    </PixelText>
-                  </View>
-                </View>
-                <Button title="여행" size="small" onPress={() => handleTravel(item.city.id)} />
-              </View>
+              <DestinationCard key={index} destination={item} onTravel={handleTravel} />
             ))}
 
             {destinations.length === 0 && (
@@ -83,16 +95,23 @@ const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
   );
 };
 
+// 공통 스타일 속성
+const cardStyle = {
+  borderRadius: BORDERS.radius.md,
+  borderWidth: 1,
+  ...SHADOWS.light,
+};
+
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: `rgba(0, 0, 0, ${MODAL_BACKGROUND_OPACITY})`,
     justifyContent: "center",
     alignItems: "center",
   },
   modalContainer: {
-    width: "90%",
-    maxHeight: "80%",
+    width: MODAL_WIDTH_PERCENTAGE,
+    maxHeight: MODAL_MAX_HEIGHT_PERCENTAGE,
     backgroundColor: COLORS.background.dark,
     borderWidth: 2,
     borderColor: COLORS.berdan,
@@ -109,16 +128,14 @@ const styles = StyleSheet.create({
     maxHeight: 400,
   },
   travelDestination: {
+    ...cardStyle,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: COLORS.secondary,
-    borderRadius: BORDERS.radius.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    borderWidth: 1,
     borderColor: COLORS.berdan,
-    ...SHADOWS.light,
   },
   destinationInfo: {
     flex: 1,

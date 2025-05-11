@@ -1,0 +1,109 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 화면 및 컴포넌트 가이드
+
+이 문서는 PixelMerchant 앱의 화면(Screens)과 컴포넌트(Components) 작성에 대한 가이드라인을 제공합니다.
+
+## 화면 구조
+
+모든 화면 컴포넌트는 `src/screens` 디렉토리에 위치하며 다음 구조를 따릅니다:
+
+```
+const ScreenName = () => {
+  // 상태 및 훅
+  const navigation = useNavigation<AppNavigationProp>();
+  const { state, dispatch } = useGame();
+  
+  // 이벤트 핸들러
+  
+  // 렌더링
+  return (
+    <SafeAreaView>
+      {/* 화면 내용 */}
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  // 스타일 정의
+});
+
+export default ScreenName;
+```
+
+## 컴포넌트 패턴
+
+재사용 가능한 컴포넌트는 `src/components` 디렉토리에 위치합니다. 모든 컴포넌트는 다음 패턴을 따릅니다:
+
+- Props 타입 정의
+- 컴포넌트 선언 (함수형)
+- 스타일 정의
+- 기본 내보내기
+
+## 스타일링 패턴
+
+### 도시 화면 (CityScreen)
+
+CityScreen은 다음과 같은 구조로 레이아웃을 구성합니다:
+
+1. **헤더 섹션**: 도시 이름, 지역, 골드, 날짜 정보 표시
+   ```
+   <View style={styles.headerContainer}>
+     <View style={styles.headerLeft}>...</View>
+     <View style={styles.headerRight}>...</View>
+   </View>
+   ```
+
+2. **콘텐츠 섹션**: 스크롤 가능한 도시 정보 표시
+   ```
+   <ScrollView style={styles.contentContainer}>
+     <View style={styles.descriptionContainer}>...</View>
+     <View style={styles.infoContainer}>...</View>
+     ...
+   </ScrollView>
+   ```
+
+3. **푸터 섹션**: 주요 액션 버튼
+   ```
+   <View style={styles.footer}>
+     <Button ... />
+     ...
+   </View>
+   ```
+
+### 정보 블록 레이아웃
+
+정보를 표시하는 블록은 다음과 같은 패턴을 사용:
+
+```
+<View style={styles.infoContainer}>
+  <View style={[styles.infoItem, {borderRightWidth: 1}]}>
+    <PixelText style={styles.infoLabel}>라벨</PixelText>
+    <PixelText>값</PixelText>
+  </View>
+  ...
+</View>
+```
+
+스타일:
+```
+infoContainer: {
+  flexDirection: "row",
+  justifyContent: "center",
+  backgroundColor: `${COLORS.background.dark}B3`,
+  borderRadius: BORDERS.radius.md,
+  padding: SPACING.md,
+  marginBottom: SPACING.md,
+  ...SHADOWS.medium,
+},
+infoItem: {
+  alignItems: "center",
+  flex: 1,
+  paddingHorizontal: SPACING.sm,
+  borderRightWidth: 1,
+  borderRightColor: COLORS.primary,
+},
+```

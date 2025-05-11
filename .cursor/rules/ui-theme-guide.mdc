@@ -1,0 +1,59 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# UI 테마 가이드
+
+이 문서는 PixelMerchant 앱의 UI 테마와 스타일 가이드라인을 제공합니다. 모든 UI 컴포넌트는 이 가이드라인을 따라 일관된 디자인을 유지해야 합니다.
+
+## 색상 시스템
+
+앱의 색상은 `src/config/theme.ts`의 `COLORS` 객체에서 정의됩니다:
+
+### 주요 색상
+- `primary`: "#E6B422" - 골드 (강조 색상)
+- `secondary`: "#1A3A5A" - 네이비 (기본 색상)
+- `tertiary`: "#8B4513" - 브라운 (보조 색상)
+
+### 배경색 사용
+- 컨테이너 배경색은 `COLORS.background.dark`에 투명도를 적용하여 사용
+- 투명도 값으로는 주로 `B3` (70% 불투명도) 사용
+- 예: `backgroundColor: ${COLORS.background.dark}B3`
+
+## 간격 및 크기
+
+모든 간격과 패딩은 `SPACING` 상수를 사용하여 일관성 유지:
+- `xs`: 4px
+- `sm`: 8px
+- `md`: 12px
+- `lg`: 16px
+- `xl`: 24px
+- `xxl`: 32px
+
+## 테두리 스타일
+
+테두리 스타일은 `BORDERS` 상수를 사용:
+- 반경: `BORDERS.radius.md` (8px)
+- 두께: `BORDERS.width.thin` (1px)
+- 테두리 색상은 주로 `COLORS.primary` 사용
+
+## 그림자 효과
+
+그림자 효과는 `SHADOWS` 상수를 사용:
+- 경량: `SHADOWS.light`
+- 중간: `SHADOWS.medium`
+- 강한: `SHADOWS.dark`
+
+## 타이포그래피
+
+텍스트 스타일은 `TYPOGRAPHY` 상수와 `PixelText` 컴포넌트를 사용:
+- 제목: `variant="subtitle"`
+- 일반 텍스트: 기본값
+- 작은 텍스트: `variant="caption"`
+
+## 컴포넌트 레이아웃 가이드라인
+
+- 정보 표시 블록: flexDirection: "row"과 균일한 간격 사용 (flex: 1)
+- 화면 섹션별 분리: marginBottom: SPACING.md
+- 컨테이너 그룹화: SHADOWS.medium과 적절한 borderRadius 사용
