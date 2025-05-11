@@ -12,6 +12,7 @@ import { formatDate, getSeasonName } from "../logic/DateSystem";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 import { getCultureName } from "../utils/localization";
+import { formatRating } from "../utils/formatting";
 
 const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -101,11 +102,11 @@ const CityScreen = () => {
           <View style={styles.infoContainer}>
             <View style={styles.infoItem}>
               <PixelText style={styles.infoLabel}>규모</PixelText>
-              <PixelText>{getRatingText(currentCity.size)}</PixelText>
+              <PixelText>{formatRating(currentCity.size)}</PixelText>
             </View>
             <View style={styles.infoItem}>
               <PixelText style={styles.infoLabel}>부유함</PixelText>
-              <PixelText>{getRatingText(currentCity.wealthLevel)}</PixelText>
+              <PixelText>{formatRating(currentCity.wealthLevel)}</PixelText>
             </View>
             <View style={styles.infoItem}>
               <PixelText style={styles.infoLabel}>문화</PixelText>
@@ -154,12 +155,6 @@ const CityScreen = () => {
     </SafeAreaView>
   );
 };
-
-// 1-5 등급 텍스트 변환 헬퍼 함수
-function getRatingText(rating: number): string {
-  const symbols = ["★", "★★", "★★★", "★★★★", "★★★★★"];
-  return symbols[Math.min(Math.max(0, rating - 1), 4)];
-}
 
 const styles = StyleSheet.create({
   safeArea: {

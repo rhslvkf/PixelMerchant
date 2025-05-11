@@ -8,6 +8,7 @@ import { City, TravelConnection } from "../models/types";
 import { AppNavigationProp } from "../navigation/types";
 import { REGIONS } from "../data/cities"; // REGIONS 데이터 임포트
 import { getTransportName } from "../utils/localization"; // 추가된 유틸리티 함수 임포트
+import { formatRating } from "../utils/formatting";
 
 interface TravelDestination {
   city: City;
@@ -22,12 +23,6 @@ interface TravelModalProps {
 
 const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
   const navigation = useNavigation<AppNavigationProp>();
-
-  // 1-5 등급 텍스트 변환 헬퍼 함수
-  const getRatingText = (rating: number): string => {
-    const symbols = ["★", "★★", "★★★", "★★★★", "★★★★★"];
-    return symbols[Math.min(Math.max(0, rating - 1), 4)];
-  };
 
   const handleTravel = (destinationId: string) => {
     onClose();
@@ -55,15 +50,15 @@ const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
 
                   {/* 도시 규모와 부유함 추가 */}
                   <View style={styles.cityStats}>
-                    <PixelText variant="caption">규모: {getRatingText(item.city.size)}</PixelText>
+                    <PixelText variant="caption">규모: {formatRating(item.city.size)}</PixelText>
                     <PixelText variant="caption" style={styles.wealthStat}>
-                      부유함: {getRatingText(item.city.wealthLevel)}
+                      부유함: {formatRating(item.city.wealthLevel)}
                     </PixelText>
                   </View>
 
                   <View style={styles.destinationDetails}>
                     <PixelText variant="caption">
-                      거리: {item.connection.distance} • 위험도: {getRatingText(item.connection.dangerLevel)}
+                      거리: {item.connection.distance} • 위험도: {formatRating(item.connection.dangerLevel)}
                     </PixelText>
 
                     {/* 이동 수단을 한국어로 표시 */}
