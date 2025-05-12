@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { Image, ImageBackground, Modal, ScrollView, StyleSheet, TextStyle, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import PixelText from "../components/PixelText";
@@ -268,21 +268,33 @@ const MarketScreen = () => {
           <View style={styles.itemStats}>
             <PixelText variant="caption">보유: {inventoryItem.quantity}개</PixelText>
             <PixelText variant="caption">무게: {itemInfo.weight}/개</PixelText>
+            <PixelText variant="caption">
+              품질:{" "}
+              {inventoryItem.quality === ItemQuality.LOW
+                ? "저급"
+                : inventoryItem.quality === ItemQuality.MEDIUM
+                ? "보통"
+                : inventoryItem.quality === ItemQuality.HIGH
+                ? "고급"
+                : "보통"}
+            </PixelText>
           </View>
         </View>
         <View style={styles.itemPriceContainer}>
-          {Math.floor(sellPrice) > 0 && (
-            <View style={styles.currencyItem}>
-              <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
-              <PixelText style={styles.goldText}>{Math.floor(sellPrice)}</PixelText>
-            </View>
-          )}
-          {Math.floor((sellPrice % 1) * 100) > 0 && (
-            <View style={styles.currencyItem}>
-              <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
-              <PixelText style={styles.silverText}>{Math.floor((sellPrice % 1) * 100)}</PixelText>
-            </View>
-          )}
+          <View style={styles.verticalCurrencyContainer}>
+            {Math.floor(sellPrice) > 0 && (
+              <View style={styles.currencyItem}>
+                <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+                <PixelText style={styles.goldText}>{Math.floor(sellPrice)}</PixelText>
+              </View>
+            )}
+            {Math.floor((sellPrice % 1) * 100) > 0 && (
+              <View style={styles.currencyItem}>
+                <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
+                <PixelText style={styles.silverText}>{Math.floor((sellPrice % 1) * 100)}</PixelText>
+              </View>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -1224,6 +1236,15 @@ const styles = StyleSheet.create({
     backgroundColor: `${COLORS.background.dark}99`,
     borderRadius: BORDERS.radius.sm,
   },
+  verticalCurrencyContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  qualityText: {
+    fontSize: 10,
+    color: COLORS.text.light,
+    marginBottom: 2,
+  },
   itemPrice: {
     fontWeight: "bold",
     color: COLORS.primary,
@@ -1246,7 +1267,6 @@ const styles = StyleSheet.create({
   currencyItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: SPACING.sm,
   },
   coinIcon: {
     width: 20,
