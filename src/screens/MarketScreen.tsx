@@ -80,7 +80,9 @@ const MarketScreen = () => {
         }
       }
     } else {
-      const inventoryItem = state.player.inventory.find((item) => item.itemId === selectedItem);
+      const inventoryItem = state.player.inventory.find(
+        (item) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
+      );
       if (inventoryItem && quantity < inventoryItem.quantity) {
         setQuantity(quantity + 1);
       }
@@ -139,10 +141,20 @@ const MarketScreen = () => {
     if (!selectedItem) return;
 
     // 인벤토리에서 선택한 아이템 찾기
-    const inventoryItemIndex = state.player.inventory.findIndex((item) => item.itemId === selectedItem);
+    const inventoryItemIndex = state.player.inventory.findIndex(
+      (item) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
+    );
     const inventoryItem = state.player.inventory[inventoryItemIndex];
 
-    if (!inventoryItem) return;
+    if (!inventoryItem) {
+      showNotification("error", "판매 실패", "선택한 품질의 아이템이 없습니다.");
+      return;
+    }
+
+    if (inventoryItem.quantity < quantity) {
+      showNotification("error", "판매 실패", "보유한 수량이 부족합니다.");
+      return;
+    }
 
     // 판매 액션 디스패치
     dispatch({
@@ -156,7 +168,11 @@ const MarketScreen = () => {
     });
 
     showNotification("success", "판매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 판매했습니다.`);
-    setSelectedItem(null);
+
+    // 판매 후 수량이 0이 되면 선택 초기화, 아니면 수량만 초기화
+    if (inventoryItem.quantity <= quantity) {
+      setSelectedItem(null);
+    }
     setQuantity(1);
   };
 
@@ -455,7 +471,11 @@ const MarketScreen = () => {
                         </PixelText>
                       ) : (
                         <PixelText variant="caption">
-                          보유: {state.player.inventory.find((i) => i.itemId === selectedItem)?.quantity || 0}개
+                          보유:{" "}
+                          {state.player.inventory.find(
+                            (i) => i.itemId === selectedItem && i.quality === QUALITY_FACTORS[quality]
+                          )?.quantity || 0}
+                          개
                         </PixelText>
                       )}
                     </View>
