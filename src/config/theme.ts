@@ -6,6 +6,7 @@ export const COLORS = {
   tertiary: "#8B4513", // 브라운 (보조)
   gold: "#E6B422", // 골드 (강조)
   silver: "#C0C0C0", // 은 (보조)
+  bronze: "#CD7F32", // 철 (보조)
 
   // 테마별 색상
   berdan: "#34623F", // 베르단 제국

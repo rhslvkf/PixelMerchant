@@ -28,6 +28,27 @@ const MarketScreen = () => {
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
 
+  // 품질 텍스트 변환 함수
+  const getQualityText = (qualityValue: number): string => {
+    if (qualityValue <= QUALITY_FACTORS[ItemQuality.LOW]) return "저급";
+    if (qualityValue >= QUALITY_FACTORS[ItemQuality.HIGH]) return "고급";
+    return "보통";
+  };
+
+  // 품질 기반 ItemQuality 열거형 반환
+  const getItemQualityEnum = (qualityValue: number): ItemQuality => {
+    if (qualityValue <= QUALITY_FACTORS[ItemQuality.LOW]) return ItemQuality.LOW;
+    if (qualityValue >= QUALITY_FACTORS[ItemQuality.HIGH]) return ItemQuality.HIGH;
+    return ItemQuality.MEDIUM;
+  };
+
+  // 품질 기반 색상 스타일 반환
+  const getQualityColor = (qualityValue: number) => {
+    if (qualityValue <= QUALITY_FACTORS[ItemQuality.LOW]) return styles.lowQuality;
+    if (qualityValue >= QUALITY_FACTORS[ItemQuality.HIGH]) return styles.highQuality;
+    return styles.mediumQuality;
+  };
+
   // 현재 도시 및 시장 정보 가져오기
   const currentCity = state.world.cities[state.currentCityId];
   const marketItems = currentCity.market.items;
@@ -168,13 +189,18 @@ const MarketScreen = () => {
       }
       return 0;
     } else {
-      // 판매 로직은 이전과 비슷하게 유지
+      // 판매 로직 - 품질 고려하여 계산
       const marketItem = marketItems.find((item) => item.itemId === selectedItem);
-      const inventoryItem = state.player.inventory.find((item) => item.itemId === selectedItem);
+      const inventoryItem = state.player.inventory.find(
+        (item) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
+      );
 
       if (marketItem && inventoryItem) {
-        // 인벤토리 아이템의 품질은 이미 적용되어 있음
-        return calculatePlayerSellingPrice(marketItem.currentPrice, state.player, currentCity) * quantity;
+        // 인벤토리 아이템의 품질을 고려하여 판매 가격 계산
+        return (
+          calculatePlayerSellingPrice(marketItem.currentPrice * inventoryItem.quality, state.player, currentCity) *
+          quantity
+        );
       } else if (inventoryItem) {
         return inventoryItem.purchasePrice * 0.7 * quantity;
       }
@@ -242,8 +268,13 @@ const MarketScreen = () => {
     let sellPrice;
 
     if (marketItem) {
-      // 시장에 있는 아이템은 스프레드 적용 가격
-      sellPrice = calculatePlayerSellingPrice(marketItem.currentPrice, state.player, currentCity);
+      // 품질 계수를 고려한 판매 가격 계산
+      const itemQuality = getItemQualityEnum(inventoryItem.quality);
+      sellPrice = calculatePlayerSellingPrice(
+        marketItem.currentPrice * QUALITY_FACTORS[itemQuality],
+        state.player,
+        currentCity
+      );
     } else {
       // 시장에 없는 아이템은 구매가의 70%로 판매
       sellPrice = inventoryItem.purchasePrice * 0.7;
@@ -251,11 +282,12 @@ const MarketScreen = () => {
 
     return (
       <TouchableOpacity
-        key={inventoryItem.itemId}
+        key={inventoryItem.itemId + inventoryItem.quality}
         style={[styles.itemContainer, isSelected && styles.selectedItem]}
         onPress={() => {
           setSelectedItem(inventoryItem.itemId);
           setQuantity(1);
+          setQuality(getItemQualityEnum(inventoryItem.quality));
         }}
         onLongPress={() => {
           setDetailItem(inventoryItem.itemId);
@@ -263,20 +295,15 @@ const MarketScreen = () => {
         }}
       >
         <View style={styles.itemInfo}>
-          <PixelText style={styles.itemName}>{itemInfo.name}</PixelText>
+          <View style={styles.itemNameContainer}>
+            <PixelText style={styles.itemName}>{itemInfo.name}</PixelText>
+          </View>
           <PixelText variant="caption">{itemInfo.description}</PixelText>
           <View style={styles.itemStats}>
             <PixelText variant="caption">보유: {inventoryItem.quantity}개</PixelText>
             <PixelText variant="caption">무게: {itemInfo.weight}/개</PixelText>
-            <PixelText variant="caption">
-              품질:{" "}
-              {inventoryItem.quality === ItemQuality.LOW
-                ? "저급"
-                : inventoryItem.quality === ItemQuality.MEDIUM
-                ? "보통"
-                : inventoryItem.quality === ItemQuality.HIGH
-                ? "고급"
-                : "보통"}
+            <PixelText variant="caption" style={getQualityColor(inventoryItem.quality)}>
+              품질: {getQualityText(inventoryItem.quality)}
             </PixelText>
           </View>
         </View>
@@ -416,6 +443,12 @@ const MarketScreen = () => {
                     <PixelText variant="body">{ITEMS[selectedItem]?.description}</PixelText>
                     <View style={modalStyles.itemStatsRow}>
                       <PixelText variant="caption">무게: {ITEMS[selectedItem]?.weight}/개</PixelText>
+                      {/* 판매 시 품질 정보를 별도 row로 표시 */}
+                      {selectedTab === "sell" && state.player.inventory.find((i) => i.itemId === selectedItem) && (
+                        <PixelText variant="caption" style={getQualityColor(QUALITY_FACTORS[quality])}>
+                          품질: {getQualityText(QUALITY_FACTORS[quality])}
+                        </PixelText>
+                      )}
                       {selectedTab === "buy" ? (
                         <PixelText variant="caption">
                           재고: {marketItems.find((i) => i.itemId === selectedItem)?.qualityStock[quality] || 0}개
@@ -660,13 +693,15 @@ const MarketScreen = () => {
                           variant="caption"
                           style={getReputationEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
                         >
-                          평판 보너스: -{getReputationEffect()}%
+                          평판 보너스: {getReputationEffect() > 0 ? "-" : ""}
+                          {getReputationEffect()}%
                         </PixelText>
                         <PixelText
                           variant="caption"
                           style={getTradeSkillEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
                         >
-                          거래 기술 보너스: -{getTradeSkillEffect()}%
+                          거래 기술 보너스: {getTradeSkillEffect() > 0 ? "-" : ""}
+                          {getTradeSkillEffect()}%
                         </PixelText>
                         <PixelText
                           variant="caption"
@@ -747,6 +782,11 @@ const modalStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: SPACING.sm,
+    flexWrap: "wrap",
+  },
+  qualityInfoRow: {
+    marginTop: SPACING.xs,
+    alignItems: "center",
   },
   tradeControls: {
     marginTop: SPACING.md,
@@ -1218,10 +1258,35 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: SPACING.md,
   },
+  itemNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: SPACING.xs,
+  },
   itemName: {
     fontWeight: "bold",
     color: COLORS.text.light,
-    marginBottom: SPACING.xs,
+    marginRight: SPACING.xs,
+  },
+  qualityBadge: {
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: 2,
+    borderRadius: BORDERS.radius.sm,
+    marginLeft: SPACING.xs,
+  },
+  qualityBadgeText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.text.light,
+    fontWeight: "bold",
+  },
+  lowQuality: {
+    color: COLORS.bronze,
+  },
+  mediumQuality: {
+    color: COLORS.silver,
+  },
+  highQuality: {
+    color: COLORS.gold,
   },
   itemStats: {
     flexDirection: "row",
