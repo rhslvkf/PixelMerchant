@@ -142,6 +142,19 @@ const MarketScreen = () => {
   // 거래 버튼 활성화 여부
   const canTrade = selectedItem !== null && quantity > 0;
 
+  // 골드 부족 여부 확인
+  const isGoldInsufficient = () => {
+    if (selectedTab === "buy" && selectedItem) {
+      const marketItem = marketItems.find((item) => item.itemId === selectedItem);
+      if (marketItem) {
+        const qualityFactor = QUALITY_FACTORS[quality];
+        const totalCost = marketItem.currentPrice * quantity * qualityFactor;
+        return state.player.gold < totalCost;
+      }
+    }
+    return false;
+  };
+
   // 선택된 아이템의 총 가치 계산
   const calculateTotalValue = () => {
     if (!selectedItem) return 0;
@@ -661,9 +674,9 @@ const MarketScreen = () => {
                       style={modalStyles.cancelButton}
                     />
                     <Button
-                      title={selectedTab === "buy" ? "구매" : "판매"}
+                      title={selectedTab === "buy" ? (isGoldInsufficient() ? "재화 부족" : "구매") : "판매"}
                       onPress={selectedTab === "buy" ? handleBuy : handleSell}
-                      disabled={!canTrade}
+                      disabled={!canTrade || (selectedTab === "buy" && isGoldInsufficient())}
                       type={selectedTab === "buy" ? "primary" : "secondary"}
                       style={modalStyles.tradeButton}
                     />
