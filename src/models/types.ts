@@ -110,10 +110,28 @@ export interface MarketItem {
   itemId: string;
   basePrice: number;
   currentPrice: number;
-  quantity: number;
+  qualityStock: {
+    low: number; // 저급 재고
+    medium: number; // 보통 재고
+    high: number; // 고급 재고
+  };
   qualityRange: [number, number]; // 최소/최대 품질
   priceHistory: [GameDate, number][]; // 가격 이력
 }
+
+// 품질 타입 정의
+export enum ItemQuality {
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+}
+
+// 품질 계수 상수
+export const QUALITY_FACTORS: Record<ItemQuality, number> = {
+  [ItemQuality.LOW]: 0.8,
+  [ItemQuality.MEDIUM]: 1.0,
+  [ItemQuality.HIGH]: 1.3,
+};
 
 // 도시 관련 타입
 export interface City {

@@ -1,4 +1,4 @@
-import { GameState, Player, Season, GameSettings, TransportType, SkillType, ReputationLevel } from "../models/types";
+import { GameSettings, GameState, ItemQuality, SkillType, TransportType } from "../models/types";
 
 // 액션 타입 정의
 export type GameAction =
@@ -7,11 +7,11 @@ export type GameAction =
   | { type: "TRAVEL_TO_CITY"; payload: { cityId: string; travelDays: number } }
   | { type: "UPDATE_GOLD"; payload: { amount: number } }
   | { type: "UPDATE_SETTINGS"; payload: { settings: Partial<GameSettings> } }
-  | { type: "ADD_ITEM_TO_INVENTORY"; payload: { itemId: string; quantity: number; price: number; quality: number } }
+  | { type: "ADD_ITEM_TO_INVENTORY"; payload: { itemId: string; quantity: number; price: number } }
   | { type: "REMOVE_ITEM_FROM_INVENTORY"; payload: { itemId: string; quantity: number } }
   | { type: "UPDATE_MARKET"; payload: { cityId: string } }
-  | { type: "BUY_ITEM"; payload: { itemId: string; quantity: number; cityId: string; quality: number } }
-  | { type: "SELL_ITEM"; payload: { itemId: string; quantity: number; cityId: string } }
+  | { type: "BUY_ITEM"; payload: { itemId: string; quantity: number; cityId: string; quality: ItemQuality } }
+  | { type: "SELL_ITEM"; payload: { itemId: string; quantity: number; cityId: string; inventoryIndex: number } }
   | { type: "START_TRAVEL"; payload: { toCityId: string; transportType: TransportType } }
   | { type: "PROGRESS_TRAVEL" }
   | { type: "COMPLETE_TRAVEL" }

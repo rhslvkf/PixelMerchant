@@ -1,4 +1,4 @@
-import { Item, MarketItem, City, GameDate, Season, Market, Player } from "../models/types";
+import { Item, MarketItem, City, GameDate, Season, Market, Player, ItemQuality } from "../models/types";
 
 /**
  * 상품 가격 계산 함수
@@ -49,13 +49,41 @@ export function calculateItemPrice(
 }
 
 /**
- * 도시 시장 업데이트 함수
- *
- * @param market - 시장 정보
- * @param city - 도시 정보
- * @param currentDate - 현재 게임 날짜
- * @param globalEvents - 전역 이벤트 정보
- * @returns - 업데이트된 시장 정보
+ * 도시 부유함과 특산품 여부에 따른 품질 분포 계산
+ */
+function calculateQualityDistribution(
+  wealthLevel: number,
+  isSpecialty: boolean
+): { low: number; medium: number; high: number } {
+  // 기본 품질 분포
+  let lowRatio = 0.3;
+  let mediumRatio = 0.5;
+  let highRatio = 0.2;
+
+  // 도시 부유함에 따른 조정
+  lowRatio -= (wealthLevel - 1) * 0.05; // 부유할수록 저급 품질 감소
+  highRatio += (wealthLevel - 1) * 0.05; // 부유할수록 고급 품질 증가
+
+  // 특산품 여부에 따른 조정
+  if (isSpecialty) {
+    lowRatio -= 0.1;
+    highRatio += 0.1;
+  }
+
+  // 범위 제한
+  lowRatio = Math.max(0.1, Math.min(0.4, lowRatio));
+  highRatio = Math.max(0.1, Math.min(0.5, highRatio));
+  mediumRatio = 1 - lowRatio - highRatio;
+
+  return {
+    low: lowRatio,
+    medium: mediumRatio,
+    high: highRatio,
+  };
+}
+
+/**
+ * 도시 시장 업데이트 함수 - 품질별 재고 관리 반영
  */
 export function updateCityMarket(
   market: Market,
@@ -84,14 +112,27 @@ export function updateCityMarket(
       const newDemandFactor = Math.max(-0.2, Math.min(0.2, trend + randomFactor));
       updatedMarket.demandFactors[item.itemId] = newDemandFactor;
 
-      // 재고 업데이트 (기본 보충)
-      const baseQuantity = 10 + Math.floor(city.size * 5 * (1 + (city.specialties.includes(item.itemId) ? 0.5 : 0)));
-      const adjustedQuantity = Math.max(5, Math.min(item.quantity + Math.floor(baseQuantity * 0.3), baseQuantity * 2));
+      // 품질별 재고 업데이트
+      const isSpecialty = city.specialties.includes(item.itemId);
+      const baseQuantity = 10 + Math.floor(city.size * 5 * (1 + (isSpecialty ? 0.5 : 0)));
+
+      // 품질별 재고 분포 (1-3-2 비율: 저급 17%, 보통 50%, 고급 33%)
+      // 고급 도시일수록 고급 품질 비율 증가, 특산품일수록 고급 품질 비율 증가
+      const qualityDistribution = calculateQualityDistribution(city.wealthLevel, isSpecialty);
+
+      // 품질별 재고 계산
+      const lowStock = Math.max(2, Math.floor(baseQuantity * qualityDistribution.low));
+      const mediumStock = Math.max(3, Math.floor(baseQuantity * qualityDistribution.medium));
+      const highStock = Math.max(1, Math.floor(baseQuantity * qualityDistribution.high));
 
       return {
         ...item,
         priceHistory: priceHistory.slice(-10), // 최근 10개 가격만 유지
-        quantity: adjustedQuantity,
+        qualityStock: {
+          low: lowStock,
+          medium: mediumStock,
+          high: highStock,
+        },
       };
     });
 
@@ -139,14 +180,15 @@ function generateMarketTrend(
 }
 
 /**
- * 플레이어 거래 후 시장 영향 적용
+ * 플레이어 거래 후 시장 영향 적용 - 품질별 재고 관리 반영
  *
  * @param market - 시장 정보
  * @param itemId - 거래한 아이템 ID
+ * @param quality - 아이템 품질 (low, medium, high)
  * @param quantity - 거래 수량 (구매 -, 판매 +)
  * @returns - 업데이트된 시장 정보
  */
-export function applyPlayerTradeImpact(market: Market, itemId: string, quantity: number): Market {
+export function applyPlayerTradeImpact(market: Market, itemId: string, quality: ItemQuality, quantity: number): Market {
   const updatedMarket = {
     ...market,
     items: [...market.items],
@@ -157,12 +199,18 @@ export function applyPlayerTradeImpact(market: Market, itemId: string, quantity:
 
   if (itemIndex < 0) return market;
 
-  // 재고 업데이트
+  // 재고 업데이트 - 품질별로 수정
   const updatedItem = { ...updatedMarket.items[itemIndex] };
-  updatedItem.quantity += quantity;
+  updatedItem.qualityStock = {
+    ...updatedItem.qualityStock,
+    [quality]: Math.max(0, updatedItem.qualityStock[quality] + quantity),
+  };
+
+  // 총 재고 계산
+  const totalStock = Object.values(updatedItem.qualityStock).reduce((sum, val) => sum + val, 0);
 
   // 시장 영향력 계산 (재고의 20% 이상 거래시 영향)
-  const impactThreshold = Math.max(1, Math.floor(updatedItem.quantity * 0.2));
+  const impactThreshold = Math.max(1, Math.floor(totalStock * 0.2));
   const hasSignificantImpact = Math.abs(quantity) >= impactThreshold;
 
   if (hasSignificantImpact) {

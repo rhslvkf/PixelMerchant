@@ -1,4 +1,4 @@
-import { City, Region, Market, TransportType, Season } from "../models/types";
+import { City, Region, Market, TransportType, Season, MarketItem } from "../models/types";
 import { ITEMS, ITEM_KEYS } from "./items";
 
 // 지역 데이터
@@ -61,22 +61,28 @@ const createInitialMarket = (cityId: string, specialties: string[] = []): Market
     .map((item) => {
       const isSpecialty = specialties.includes(item.id);
       const baseQuantity = isSpecialty ? 30 : 10;
-      const qualityRange: [number, number] = isSpecialty
-        ? [0.9, 1.3] // 특산품은 품질 좋음
-        : [0.8, 1.1]; // 일반 상품
+
+      // 품질별 재고 계산
+      const lowStock = Math.floor(baseQuantity * 0.3); // 30%
+      const highStock = Math.floor(baseQuantity * 0.2); // 20%
+      const mediumStock = baseQuantity - lowStock - highStock; // 나머지
 
       return {
         itemId: item.id,
         basePrice: item.basePrice,
         currentPrice: item.basePrice, // 초기에는 기본가
-        quantity: Math.floor(baseQuantity * (0.7 + Math.random() * 0.6)), // 약간의 랜덤성
-        qualityRange,
+        qualityStock: {
+          low: lowStock,
+          medium: mediumStock,
+          high: highStock,
+        },
+        qualityRange: isSpecialty ? [0.9, 1.3] : [0.8, 1.1], // 특산품은 품질 좋음
         priceHistory: [], // 초기에는 가격 이력 없음
       };
     });
 
   return {
-    items: cityItems,
+    items: cityItems as unknown as MarketItem[],
     lastUpdated: createInitialDate(),
     demandFactors: {}, // 초기에는 수요 계수 없음
     volatility: 0.2 + Math.random() * 0.3, // 0.2-0.5 사이 변동성
