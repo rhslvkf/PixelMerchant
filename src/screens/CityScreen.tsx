@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { ImageBackground, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
@@ -11,8 +11,8 @@ import { ITEMS } from "../data/items";
 import { formatDate, getSeasonName } from "../logic/DateSystem";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
-import { getCultureName } from "../utils/localization";
 import { formatRating } from "../utils/formatting";
+import { getCultureName } from "../utils/localization";
 
 // 공통 컨테이너 스타일을 위한 상수
 const CONTAINER_BACKGROUND = `${COLORS.background.dark}B3`;
@@ -24,23 +24,23 @@ interface InfoItemProps {
   hasBorder?: boolean;
 }
 
-const InfoItem = ({ label, value, hasBorder = false }: InfoItemProps) => (
+const InfoItem = React.memo(({ label, value, hasBorder = false }: InfoItemProps) => (
   <View style={[styles.infoItem, hasBorder ? { borderRightWidth: 1 } : {}]}>
     <PixelText style={styles.infoLabel}>{label}</PixelText>
     <PixelText>{value}</PixelText>
   </View>
-);
+));
 
 // 특산품 항목 컴포넌트
 interface SpecialtyItemProps {
   itemId: string;
 }
 
-const SpecialtyItem = ({ itemId }: SpecialtyItemProps) => (
+const SpecialtyItem = React.memo(({ itemId }: SpecialtyItemProps) => (
   <View style={styles.specialtyItem}>
     <PixelText>{ITEMS[itemId]?.name || itemId}</PixelText>
   </View>
-);
+));
 
 // 장소 버튼 컴포넌트
 interface PlaceButtonProps {
@@ -48,11 +48,55 @@ interface PlaceButtonProps {
   onPress?: () => void;
 }
 
-const PlaceButton = ({ name, onPress }: PlaceButtonProps) => (
+const PlaceButton = React.memo(({ name, onPress }: PlaceButtonProps) => (
   <TouchableOpacity style={styles.placeButton} onPress={onPress}>
     <PixelText>{name}</PixelText>
   </TouchableOpacity>
-);
+));
+
+// 도시 설명 컴포넌트
+interface CityInfoProps {
+  description: string;
+}
+
+const CityInfo = React.memo(({ description }: CityInfoProps) => (
+  <View style={styles.descriptionContainer}>
+    <PixelText style={styles.descriptionText}>{description}</PixelText>
+  </View>
+));
+
+// 특산품 목록 컴포넌트
+interface SpecialtiesListProps {
+  specialties: string[];
+}
+
+const SpecialtiesList = React.memo(({ specialties }: SpecialtiesListProps) => (
+  <View style={styles.specialtiesContainer}>
+    <PixelText style={styles.sectionTitle}>특산품</PixelText>
+    <View style={styles.specialtiesList}>
+      {specialties.map((itemId, index) => (
+        <SpecialtyItem key={index} itemId={itemId} />
+      ))}
+    </View>
+  </View>
+));
+
+// 장소 목록 컴포넌트
+interface PlacesGridProps {
+  onMarketPress: () => void;
+}
+
+const PlacesGrid = React.memo(({ onMarketPress }: PlacesGridProps) => (
+  <View style={styles.placesContainer}>
+    <PixelText style={styles.sectionTitle}>이용 가능 장소</PixelText>
+    <View style={styles.placesGrid}>
+      <PlaceButton name="시장" onPress={onMarketPress} />
+      <PlaceButton name="여관" />
+      <PlaceButton name="길드" />
+      <PlaceButton name="항구" />
+    </View>
+  </View>
+));
 
 const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -64,14 +108,23 @@ const CityScreen = () => {
   const currentRegion = state.world.regions[currentCity.regionId];
 
   // 날짜와 시간 정보 포맷팅
-  const dateString = formatDate(state.currentDate);
-  const seasonName = getSeasonName(state.currentDate.season);
+  const dateString = useMemo(() => formatDate(state.currentDate), [state.currentDate]);
+  const seasonName = useMemo(() => getSeasonName(state.currentDate.season), [state.currentDate.season]);
 
-  // 연결된 도시 정보 가져오기
-  const connectedCities = currentCity.travelConnections.map((conn) => ({
-    connection: conn,
-    city: state.world.cities[conn.destinationId],
-  }));
+  // 연결된 도시 정보 가져오기 (최적화)
+  const connectedCities = useMemo(() => {
+    return currentCity.travelConnections.map((conn) => ({
+      connection: conn,
+      city: state.world.cities[conn.destinationId],
+    }));
+  }, [currentCity.travelConnections, state.world.cities]);
+
+  // 도시 배경 이미지 가져오기 (최적화)
+  const cityBackgroundImage = useMemo(() => {
+    return currentCity.backgroundImage && CITY_IMAGES[currentCity.backgroundImage]
+      ? CITY_IMAGES[currentCity.backgroundImage]
+      : CITY_IMAGES.default_city_bg;
+  }, [currentCity.backgroundImage]);
 
   // 도시 진입 시 시장 업데이트
   useEffect(() => {
@@ -80,13 +133,6 @@ const CityScreen = () => {
       payload: { cityId: state.currentCityId },
     });
   }, [state.currentCityId, dispatch]);
-
-  // 도시 배경 이미지 가져오기
-  const getCityBackgroundImage = () => {
-    return currentCity.backgroundImage && CITY_IMAGES[currentCity.backgroundImage]
-      ? CITY_IMAGES[currentCity.backgroundImage]
-      : CITY_IMAGES.default_city_bg;
-  };
 
   // 이벤트 핸들러들
   const toggleTravelModal = () => setShowTravelModal(!showTravelModal);
@@ -97,7 +143,7 @@ const CityScreen = () => {
   // UI 렌더링
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ImageBackground source={getCityBackgroundImage()} style={styles.background} imageStyle={styles.backgroundImage}>
+      <ImageBackground source={cityBackgroundImage} style={styles.background} imageStyle={styles.backgroundImage}>
         {/* 헤더 섹션 */}
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
@@ -118,9 +164,7 @@ const CityScreen = () => {
 
         {/* 컨텐츠 섹션 */}
         <ScrollView style={styles.contentContainer}>
-          <View style={styles.descriptionContainer}>
-            <PixelText style={styles.descriptionText}>{currentCity.description}</PixelText>
-          </View>
+          <CityInfo description={currentCity.description} />
 
           <View style={styles.infoContainer}>
             <InfoItem label="규모" value={formatRating(currentCity.size)} hasBorder />
@@ -128,24 +172,9 @@ const CityScreen = () => {
             <InfoItem label="문화" value={getCultureName(currentRegion.culture)} />
           </View>
 
-          <View style={styles.specialtiesContainer}>
-            <PixelText style={styles.sectionTitle}>특산품</PixelText>
-            <View style={styles.specialtiesList}>
-              {currentCity.specialties.map((itemId, index) => (
-                <SpecialtyItem key={index} itemId={itemId} />
-              ))}
-            </View>
-          </View>
+          <SpecialtiesList specialties={currentCity.specialties} />
 
-          <View style={styles.placesContainer}>
-            <PixelText style={styles.sectionTitle}>이용 가능 장소</PixelText>
-            <View style={styles.placesGrid}>
-              <PlaceButton name="시장" onPress={goToMarket} />
-              <PlaceButton name="여관" />
-              <PlaceButton name="길드" />
-              <PlaceButton name="항구" />
-            </View>
-          </View>
+          <PlacesGrid onMarketPress={goToMarket} />
         </ScrollView>
 
         {/* 푸터 섹션 */}

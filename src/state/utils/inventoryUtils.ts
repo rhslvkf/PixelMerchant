@@ -1,4 +1,5 @@
-import { InventoryItem } from "../../models/types";
+import { ItemQuality, QUALITY_FACTORS } from "../../models";
+import { InventoryItem } from "../../models/index";
 
 /**
  * 인벤토리에 아이템 추가 함수
@@ -15,10 +16,10 @@ export function addItemToInventory(
   itemId: string,
   quantity: number,
   price: number,
-  quality: number
+  quality: ItemQuality
 ): InventoryItem[] {
   const existingItemIndex = inventory.findIndex(
-    (item) => item.itemId === itemId && Math.abs(item.quality - quality) < 0.01
+    (item) => item.itemId === itemId && Math.abs(item.quality - QUALITY_FACTORS[quality]) < 0.01
   );
 
   const updatedInventory = [...inventory];
@@ -40,7 +41,7 @@ export function addItemToInventory(
       itemId,
       quantity,
       purchasePrice: price,
-      quality,
+      quality: QUALITY_FACTORS[quality],
     });
   }
 

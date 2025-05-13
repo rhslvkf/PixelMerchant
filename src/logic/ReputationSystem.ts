@@ -1,4 +1,4 @@
-import { ReputationLevel, FactionReputation } from "../models/types";
+import { FactionReputation, ReputationLevel } from "../models/index";
 
 /**
  * 다음 평판 레벨에 필요한 포인트 계산

@@ -1,4 +1,4 @@
-import { Currency } from "../../models/types";
+import { Currency } from "../../models/index";
 
 /**
  * 소수점 골드 값을 골드와 실버로 변환

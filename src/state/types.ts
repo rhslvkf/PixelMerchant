@@ -1,4 +1,4 @@
-import { GameSettings, GameState, ItemQuality, SkillType, TransportType } from "../models/types";
+import { GameSettings, GameState, ItemQuality, SkillType, TransportType } from "../models/index";
 
 // 액션 타입 정의
 export type GameAction =
@@ -7,7 +7,10 @@ export type GameAction =
   | { type: "TRAVEL_TO_CITY"; payload: { cityId: string; travelDays: number } }
   | { type: "UPDATE_GOLD"; payload: { amount: number } }
   | { type: "UPDATE_SETTINGS"; payload: { settings: Partial<GameSettings> } }
-  | { type: "ADD_ITEM_TO_INVENTORY"; payload: { itemId: string; quantity: number; price: number } }
+  | {
+      type: "ADD_ITEM_TO_INVENTORY";
+      payload: { itemId: string; quantity: number; price: number; quality: ItemQuality };
+    }
   | { type: "REMOVE_ITEM_FROM_INVENTORY"; payload: { itemId: string; quantity: number } }
   | { type: "UPDATE_MARKET"; payload: { cityId: string } }
   | { type: "BUY_ITEM"; payload: { itemId: string; quantity: number; cityId: string; quality: ItemQuality } }

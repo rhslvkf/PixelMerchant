@@ -1,4 +1,4 @@
-import { InventoryItem, Item } from "../models/types";
+import { InventoryItem, Item } from "../models/index";
 
 /**
  * 인벤토리 무게 계산 함수
@@ -8,11 +8,15 @@ import { InventoryItem, Item } from "../models/types";
  * @returns - 전체 무게
  */
 export function calculateInventoryWeight(inventory: InventoryItem[], items: Record<string, Item>): number {
+  if (!inventory || !items) return 0;
+
   return inventory.reduce((total, invItem) => {
+    if (!invItem) return total;
+
     const item = items[invItem.itemId];
     if (!item) return total;
 
-    return total + item.weight * invItem.quantity;
+    return total + (item.weight || 0) * (invItem.quantity || 0);
   }, 0);
 }
 
@@ -31,7 +35,11 @@ export function sortInventory(
   ascending: boolean = true,
   items: Record<string, Item>
 ): InventoryItem[] {
+  if (!inventory || !items) return [];
+
   return [...inventory].sort((a, b) => {
+    if (!a || !b) return 0;
+
     const itemA = items[a.itemId];
     const itemB = items[b.itemId];
 
@@ -41,20 +49,22 @@ export function sortInventory(
 
     switch (sortBy) {
       case "name":
-        comparison = itemA.name.localeCompare(itemB.name);
+        comparison = itemA.name?.localeCompare(itemB.name || "") || 0;
         break;
       case "quantity":
-        comparison = a.quantity - b.quantity;
+        comparison = (a.quantity || 0) - (b.quantity || 0);
         break;
       case "price":
-        comparison = a.purchasePrice - b.purchasePrice;
+        comparison = (a.purchasePrice || 0) - (b.purchasePrice || 0);
         break;
       case "weight":
-        comparison = itemA.weight - itemB.weight;
+        comparison = (itemA.weight || 0) - (itemB.weight || 0);
         break;
       case "category":
-        comparison = itemA.category.localeCompare(itemB.category);
+        comparison = itemA.category?.localeCompare(itemB.category || "") || 0;
         break;
+      default:
+        comparison = 0;
     }
 
     return ascending ? comparison : -comparison;
@@ -72,11 +82,15 @@ export function groupInventoryByCategory(
   inventory: InventoryItem[],
   items: Record<string, Item>
 ): Record<string, InventoryItem[]> {
+  if (!inventory || !items) return {};
+
   return inventory.reduce((groups, item) => {
+    if (!item) return groups;
+
     const itemInfo = items[item.itemId];
     if (!itemInfo) return groups;
 
-    const category = itemInfo.category;
+    const category = itemInfo.category || "unknown";
 
     if (!groups[category]) {
       groups[category] = [];
@@ -95,9 +109,13 @@ export function groupInventoryByCategory(
  * @returns - 전체 인벤토리 가치
  */
 export function calculateInventoryValue(inventory: InventoryItem[], currentPrices: Record<string, number>): number {
+  if (!inventory || !currentPrices) return 0;
+
   return inventory.reduce((total, item) => {
-    const currentPrice = currentPrices[item.itemId] || item.purchasePrice;
-    return total + currentPrice * item.quantity;
+    if (!item) return total;
+
+    const currentPrice = currentPrices[item.itemId] || item.purchasePrice || 0;
+    return total + currentPrice * (item.quantity || 0);
   }, 0);
 }
 
@@ -114,6 +132,13 @@ export function checkInventoryCapacity(
   items: Record<string, Item>,
   maxWeight: number
 ): { weight: number; isOverCapacity: boolean } {
+  if (!inventory || !items || maxWeight === undefined) {
+    return {
+      weight: 0,
+      isOverCapacity: false,
+    };
+  }
+
   const weight = calculateInventoryWeight(inventory, items);
   return {
     weight,

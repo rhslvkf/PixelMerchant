@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Image, ImageBackground, Dimensions, Animated, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { COLORS, SPACING, TYPOGRAPHY } from "../config/theme";
+import React, { useEffect, useState } from "react";
+import { Animated, Dimensions, Image, ImageBackground, StyleSheet, View } from "react-native";
 import Button from "../components/Button";
+import ConfirmationModal from "../components/ConfirmationModal";
 import PixelText from "../components/PixelText";
+import SettingsModal from "../components/SettingsModal";
 import { SCREENS } from "../config/constants";
+import { SPACING } from "../config/theme";
 import { useGame } from "../state/GameContext";
 import { StorageService } from "../storage/StorageService";
-import SettingsModal from "../components/SettingsModal";
-import ConfirmationModal from "../components/ConfirmationModal";
 
 const { width, height } = Dimensions.get("window");
 

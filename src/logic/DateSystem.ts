@@ -1,4 +1,4 @@
-import { GameDate, Season } from "../models/types";
+import { GameDate, Season } from "../models/index";
 
 /**
  * 게임 날짜를 하루 진행시키는 함수

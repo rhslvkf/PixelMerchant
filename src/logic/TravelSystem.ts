@@ -1,4 +1,4 @@
-import { TravelRoute, TransportType, GameDate, TravelEvent, City, Season } from "../models/types";
+import { City, GameDate, Season, TransportType, TravelEvent, TravelRoute } from "../models/index";
 import { advanceDate } from "./DateSystem";
 
 /**

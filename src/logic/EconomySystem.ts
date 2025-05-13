@@ -1,4 +1,4 @@
-import { Item, MarketItem, City, GameDate, Season, Market, Player, ItemQuality } from "../models/types";
+import { Item, MarketItem, City, GameDate, Season, Market, Player, ItemQuality } from "../models";
 
 /**
  * 상품 가격 계산 함수
@@ -83,6 +83,63 @@ function calculateQualityDistribution(
 }
 
 /**
+ * 시장 가격 업데이트 함수
+ */
+function updateMarketPrices(
+  item: MarketItem,
+  city: City,
+  currentDate: GameDate,
+  volatility: number,
+  globalEvents: Record<string, number> = {}
+): { updatedItem: MarketItem; newDemandFactor: number } {
+  // 현재 가격 기록
+  const priceHistory = [...item.priceHistory, [currentDate, item.currentPrice] as [GameDate, number]];
+
+  // 가격 트렌드 계산
+  const trend = generateMarketTrend(item.itemId, city, currentDate, globalEvents);
+
+  // 시장 변동성에 따른 랜덤 요소
+  const randomFactor = (Math.random() - 0.5) * volatility * 0.1;
+
+  // 수요 계수 업데이트
+  const newDemandFactor = Math.max(-0.2, Math.min(0.2, trend + randomFactor));
+
+  // 아이템 정보 업데이트
+  const updatedItem = {
+    ...item,
+    priceHistory: priceHistory.slice(-10), // 최근 10개 가격만 유지
+  };
+
+  return { updatedItem, newDemandFactor };
+}
+
+/**
+ * 재고 수준 업데이트 함수
+ */
+function updateStockLevels(
+  item: MarketItem,
+  city: City,
+  wealthLevel: number
+): { low: number; medium: number; high: number } {
+  const isSpecialty = city.specialties.includes(item.itemId);
+  const baseQuantity = 10 + Math.floor(city.size * 5 * (1 + (isSpecialty ? 0.5 : 0)));
+
+  // 품질 분포 계산
+  const qualityDistribution = calculateQualityDistribution(wealthLevel, isSpecialty);
+
+  // 품질별 재고 계산
+  const lowStock = Math.max(2, Math.floor(baseQuantity * qualityDistribution.low));
+  const mediumStock = Math.max(3, Math.floor(baseQuantity * qualityDistribution.medium));
+  const highStock = Math.max(1, Math.floor(baseQuantity * qualityDistribution.high));
+
+  return {
+    low: lowStock,
+    medium: mediumStock,
+    high: highStock,
+  };
+}
+
+/**
  * 도시 시장 업데이트 함수 - 품질별 재고 관리 반영
  */
 export function updateCityMarket(
@@ -99,40 +156,24 @@ export function updateCityMarket(
     const updatedMarket = { ...market };
 
     updatedMarket.items = market.items.map((item) => {
-      // 현재 가격 기록
-      const priceHistory = [...item.priceHistory, [currentDate, item.currentPrice] as [GameDate, number]];
-
-      // 가격 트렌드 계산
-      const trend = generateMarketTrend(item.itemId, city, currentDate, globalEvents);
-
-      // 시장 변동성에 따른 랜덤 요소
-      const randomFactor = (Math.random() - 0.5) * market.volatility * 0.1;
+      // 가격 업데이트
+      const { updatedItem, newDemandFactor } = updateMarketPrices(
+        item,
+        city,
+        currentDate,
+        market.volatility,
+        globalEvents
+      );
 
       // 수요 계수 업데이트
-      const newDemandFactor = Math.max(-0.2, Math.min(0.2, trend + randomFactor));
       updatedMarket.demandFactors[item.itemId] = newDemandFactor;
 
-      // 품질별 재고 업데이트
-      const isSpecialty = city.specialties.includes(item.itemId);
-      const baseQuantity = 10 + Math.floor(city.size * 5 * (1 + (isSpecialty ? 0.5 : 0)));
-
-      // 품질별 재고 분포 (1-3-2 비율: 저급 17%, 보통 50%, 고급 33%)
-      // 고급 도시일수록 고급 품질 비율 증가, 특산품일수록 고급 품질 비율 증가
-      const qualityDistribution = calculateQualityDistribution(city.wealthLevel, isSpecialty);
-
-      // 품질별 재고 계산
-      const lowStock = Math.max(2, Math.floor(baseQuantity * qualityDistribution.low));
-      const mediumStock = Math.max(3, Math.floor(baseQuantity * qualityDistribution.medium));
-      const highStock = Math.max(1, Math.floor(baseQuantity * qualityDistribution.high));
+      // 재고 업데이트
+      const newStockLevels = updateStockLevels(item, city, city.wealthLevel);
 
       return {
-        ...item,
-        priceHistory: priceHistory.slice(-10), // 최근 10개 가격만 유지
-        qualityStock: {
-          low: lowStock,
-          medium: mediumStock,
-          high: highStock,
-        },
+        ...updatedItem,
+        qualityStock: newStockLevels,
       };
     });
 

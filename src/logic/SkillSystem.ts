@@ -1,4 +1,4 @@
-import { SkillType, SkillExperience, DetailedSkills } from "../models/types";
+import { DetailedSkills, SkillExperience, SkillType } from "../models/index";
 
 /**
  * 스킬 경험치를 기반으로 상세 스킬 정보 생성

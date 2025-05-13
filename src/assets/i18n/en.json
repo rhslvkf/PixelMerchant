@@ -1,0 +1,23 @@
+{
+  "cultures": {
+    "berdan": "Berdan",
+    "riona": "Riona",
+    "kragmore": "Kragmore",
+    "sahel": "Sahel",
+    "azure": "Azure"
+  },
+  "transport": {
+    "foot": "On Foot",
+    "cart": "By Cart",
+    "ship": "By Ship",
+    "special": "Special Transport"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+}

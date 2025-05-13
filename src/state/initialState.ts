@@ -1,6 +1,6 @@
-import { GameState, Player, Season, SkillType } from "../models/types";
 import { DEFAULT_SETTINGS } from "../config/constants";
 import { CITIES, REGIONS } from "../data/cities";
+import { GameState, Player, Season, SkillType } from "../models/index";
 
 // 초기 플레이어 상태 정의
 export const initialPlayer: Player = {

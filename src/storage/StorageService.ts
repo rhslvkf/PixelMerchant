@@ -1,11 +1,24 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { GameState } from "../models/types";
+import { GameState } from "../models/index";
 
 const STORAGE_KEYS = {
   CURRENT_GAME: "@PixelMerchant:currentGame",
   SAVE_SLOTS: "@PixelMerchant:saveSlots",
   SETTINGS: "@PixelMerchant:settings",
 };
+
+/**
+ * 스토리지 작업 관련 에러를 표현하는 전용 에러 클래스
+ */
+export class StorageError extends Error {
+  cause: any;
+
+  constructor(operation: string, originalError: any) {
+    super(`Storage operation '${operation}' failed: ${originalError.message}`);
+    this.name = "StorageError";
+    this.cause = originalError;
+  }
+}
 
 export class StorageService {
   // 현재 게임 저장
@@ -15,7 +28,7 @@ export class StorageService {
       await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_GAME, serializedState);
       return true;
     } catch (error) {
-      console.error("Error saving current game:", error);
+      console.error(new StorageError("saveCurrentGame", error));
       return false;
     }
   }
@@ -26,7 +39,7 @@ export class StorageService {
       const serializedState = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_GAME);
       return serializedState ? JSON.parse(serializedState) : null;
     } catch (error) {
-      console.error("Error loading current game:", error);
+      console.error(new StorageError("loadCurrentGame", error));
       return null;
     }
   }
@@ -44,7 +57,7 @@ export class StorageService {
       await AsyncStorage.setItem(key, JSON.stringify(saveData));
       return true;
     } catch (error) {
-      console.error(`Error saving game to slot ${slotId}:`, error);
+      console.error(new StorageError(`saveGameToSlot(${slotId})`, error));
       return false;
     }
   }
@@ -59,7 +72,7 @@ export class StorageService {
       const saveData = JSON.parse(serializedData);
       return saveData.gameState;
     } catch (error) {
-      console.error(`Error loading game from slot ${slotId}:`, error);
+      console.error(new StorageError(`loadGameFromSlot(${slotId})`, error));
       return null;
     }
   }
@@ -70,7 +83,7 @@ export class StorageService {
       const keys = await AsyncStorage.getAllKeys();
       return keys.filter((key) => key.startsWith(STORAGE_KEYS.SAVE_SLOTS));
     } catch (error) {
-      console.error("Error getting all save slots:", error);
+      console.error(new StorageError("getAllSaveSlots", error));
       return [];
     }
   }
@@ -81,7 +94,7 @@ export class StorageService {
       await AsyncStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
       return true;
     } catch (error) {
-      console.error("Error saving settings:", error);
+      console.error(new StorageError("saveSettings", error));
       return false;
     }
   }
@@ -92,7 +105,7 @@ export class StorageService {
       const settings = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
       return settings ? JSON.parse(settings) : null;
     } catch (error) {
-      console.error("Error loading settings:", error);
+      console.error(new StorageError("loadSettings", error));
       return null;
     }
   }

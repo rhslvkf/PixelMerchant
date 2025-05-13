@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Modal, View, StyleSheet, TouchableOpacity, Switch } from "react-native";
-import { COLORS, SPACING, TYPOGRAPHY } from "../config/theme";
-import PixelText from "./PixelText";
+import { Modal, StyleSheet, Switch, View } from "react-native";
+import { COLORS, SPACING } from "../config/theme";
+import { GameSettings } from "../models/index";
 import Button from "./Button";
-import { GameSettings } from "../models/types";
+import PixelText from "./PixelText";
 
 interface SettingsModalProps {
   visible: boolean;

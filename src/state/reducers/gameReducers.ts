@@ -1,4 +1,4 @@
-import { GameState, GameSettings } from "../../models/types";
+import { GameSettings, GameState } from "../../models/index";
 
 /**
  * 게임 설정 업데이트 리듀서

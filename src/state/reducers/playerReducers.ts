@@ -1,9 +1,10 @@
-import { GameState, SkillType, ReputationLevel, SkillExperience, FactionReputation } from "../../models/types";
+import { GameState, SkillType, ReputationLevel, SkillExperience, FactionReputation } from "../../models/index";
 import { GameAction } from "../types";
 import { addItemToInventory, removeItemFromInventory } from "../utils/inventoryUtils";
 import { calculateExpForNextLevel } from "../../logic/SkillSystem";
 import { updateReputation, calculatePointsForNextLevel } from "../../logic/ReputationSystem";
 import { initialPlayer } from "../initialState";
+import { ItemQuality } from "../../models";
 
 /**
  * 새 게임 시작 리듀서
@@ -41,7 +42,7 @@ export function addItemToInventoryReducer(
   itemId: string,
   quantity: number,
   price: number,
-  quality: number
+  quality: ItemQuality
 ): GameState {
   return {
     ...state,

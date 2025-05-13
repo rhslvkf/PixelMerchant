@@ -1,238 +1,56 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Image, ImageBackground, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import PixelText from "../components/PixelText";
+import ItemDetailModal from "../components/market/ItemDetailModal";
+import NotificationDialog from "../components/market/NotificationDialog";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { ITEMS } from "../data/items";
-import { calculatePlayerSellingPrice } from "../logic/EconomySystem";
-import { ItemQuality, MarketItem, QUALITY_FACTORS } from "../models/types";
+import { useMarketLogic } from "../hooks/useMarketLogic";
+import { ItemQuality, MarketItem, QUALITY_FACTORS } from "../models";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
-import { formatGold } from "../utils/formatting";
+import { calculatePlayerSellingPrice } from "../logic/EconomySystem";
 
 const MarketScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
-  const { state, dispatch } = useGame();
-  const [selectedTab, setSelectedTab] = useState<"buy" | "sell">("buy");
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [quality, setQuality] = useState<ItemQuality>(ItemQuality.MEDIUM);
+  const { state } = useGame();
+
+  // 리팩토링: 커스텀 훅으로 로직 분리
+  const marketLogic = useMarketLogic();
+
+  // 상세 정보 모달 관련 상태
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailItem, setDetailItem] = useState<string | null>(null);
 
-  // 알림 다이얼로그 상태
-  const [showDialog, setShowDialog] = useState(false);
-  const [dialogType, setDialogType] = useState<"success" | "error">("success");
-  const [dialogTitle, setDialogTitle] = useState("");
-  const [dialogMessage, setDialogMessage] = useState("");
-
-  // 품질 텍스트 변환 함수
-  const getQualityText = (qualityValue: number): string => {
-    if (qualityValue <= QUALITY_FACTORS[ItemQuality.LOW]) return "저급";
-    if (qualityValue >= QUALITY_FACTORS[ItemQuality.HIGH]) return "고급";
-    return "보통";
-  };
-
-  // 품질 기반 ItemQuality 열거형 반환
-  const getItemQualityEnum = (qualityValue: number): ItemQuality => {
-    if (qualityValue <= QUALITY_FACTORS[ItemQuality.LOW]) return ItemQuality.LOW;
-    if (qualityValue >= QUALITY_FACTORS[ItemQuality.HIGH]) return ItemQuality.HIGH;
-    return ItemQuality.MEDIUM;
-  };
-
-  // 품질 기반 색상 스타일 반환
-  const getQualityColor = (qualityValue: number) => {
-    if (qualityValue <= QUALITY_FACTORS[ItemQuality.LOW]) return styles.lowQuality;
-    if (qualityValue >= QUALITY_FACTORS[ItemQuality.HIGH]) return styles.highQuality;
-    return styles.mediumQuality;
-  };
-
-  // 현재 도시 및 시장 정보 가져오기
-  const currentCity = state.world.cities[state.currentCityId];
-  const marketItems = currentCity.market.items;
-
-  // 탭 변경 시 선택 초기화
-  useEffect(() => {
-    setSelectedItem(null);
-    setQuantity(1);
-  }, [selectedTab]);
-
-  // 다이얼로그 표시 함수
-  const showNotification = (type: "success" | "error", title: string, message: string) => {
-    setDialogType(type);
-    setDialogTitle(title);
-    setDialogMessage(message);
-    setShowDialog(true);
-  };
-
-  // 수량 증가
-  const increaseQuantity = () => {
-    if (selectedTab === "buy") {
-      const item = marketItems.find((item) => item.itemId === selectedItem);
-      if (item) {
-        // 현재 선택된 품질의 재고만 고려
-        const availableStock = getStockForQuality(item, quality);
-        // 항상 재고 확인
-        if (quantity < availableStock) {
-          setQuantity(quantity + 1);
-        }
-      }
-    } else {
-      const inventoryItem = state.player.inventory.find(
-        (item) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
-      );
-      if (inventoryItem && quantity < inventoryItem.quantity) {
-        setQuantity(quantity + 1);
-      }
-    }
-  };
-
-  // 수량 감소
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
-
-  // 아이템 구매
-  const handleBuy = () => {
-    if (!selectedItem) return;
-
-    const marketItem = marketItems.find((item) => item.itemId === selectedItem);
-    if (!marketItem) return;
-
-    // 선택한 품질의 재고 확인
-    const availableStock = getStockForQuality(marketItem, quality);
-    if (availableStock < quantity) {
-      showNotification("error", "구매 실패", "선택한 품질의 재고가 부족합니다.");
-      return;
-    }
-
-    // 품질 계수를 고려한 가격 계산
-    const qualityFactor = QUALITY_FACTORS[quality];
-    const totalCost = marketItem.currentPrice * quantity * qualityFactor;
-
-    // 골드 확인
-    if (state.player.gold < totalCost) {
-      showNotification("error", "구매 실패", "골드가 부족합니다.");
-      return;
-    }
-
-    // 구매 액션 디스패치
-    dispatch({
-      type: "BUY_ITEM",
-      payload: {
-        itemId: selectedItem,
-        quantity,
-        cityId: state.currentCityId,
-        quality, // ItemQuality 타입으로 전달
-      },
-    });
-
-    showNotification("success", "구매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 구매했습니다.`);
-    setSelectedItem(null);
-    setQuantity(1);
-  };
-
-  // 아이템 판매
-  const handleSell = () => {
-    if (!selectedItem) return;
-
-    // 인벤토리에서 선택한 아이템 찾기
-    const inventoryItemIndex = state.player.inventory.findIndex(
-      (item) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
-    );
-    const inventoryItem = state.player.inventory[inventoryItemIndex];
-
-    if (!inventoryItem) {
-      showNotification("error", "판매 실패", "선택한 품질의 아이템이 없습니다.");
-      return;
-    }
-
-    if (inventoryItem.quantity < quantity) {
-      showNotification("error", "판매 실패", "보유한 수량이 부족합니다.");
-      return;
-    }
-
-    // 판매 액션 디스패치
-    dispatch({
-      type: "SELL_ITEM",
-      payload: {
-        itemId: selectedItem,
-        quantity,
-        cityId: state.currentCityId,
-        inventoryIndex: inventoryItemIndex, // 정확한 인벤토리 아이템 인덱스 전달
-      },
-    });
-
-    showNotification("success", "판매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 판매했습니다.`);
-
-    // 판매 후 수량이 0이 되면 선택 초기화, 아니면 수량만 초기화
-    if (inventoryItem.quantity <= quantity) {
-      setSelectedItem(null);
-    }
-    setQuantity(1);
-  };
-
-  // 거래 버튼 활성화 여부
-  const canTrade = selectedItem !== null && quantity > 0;
-
-  // 골드 부족 여부 확인
-  const isGoldInsufficient = () => {
-    if (selectedTab === "buy" && selectedItem) {
-      const marketItem = marketItems.find((item) => item.itemId === selectedItem);
-      if (marketItem) {
-        const qualityFactor = QUALITY_FACTORS[quality];
-        const totalCost = marketItem.currentPrice * quantity * qualityFactor;
-        return state.player.gold < totalCost;
-      }
-    }
-    return false;
-  };
-
-  // 선택된 아이템의 총 가치 계산
-  const calculateTotalValue = () => {
-    if (!selectedItem) return 0;
-
-    if (selectedTab === "buy") {
-      const marketItem = marketItems.find((item) => item.itemId === selectedItem);
-      if (marketItem) {
-        // 품질 계수 적용한 가격 계산
-        const qualityFactor = QUALITY_FACTORS[quality];
-        return marketItem.currentPrice * quantity * qualityFactor;
-      }
-      return 0;
-    } else {
-      // 판매 로직 - 품질 고려하여 계산
-      const marketItem = marketItems.find((item) => item.itemId === selectedItem);
-      const inventoryItem = state.player.inventory.find(
-        (item) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
-      );
-
-      if (marketItem && inventoryItem) {
-        // 인벤토리 아이템의 품질을 고려하여 판매 가격 계산
-        return (
-          calculatePlayerSellingPrice(marketItem.currentPrice * inventoryItem.quality, state.player, currentCity) *
-          quantity
-        );
-      } else if (inventoryItem) {
-        return inventoryItem.purchasePrice * 0.7 * quantity;
-      }
-      return 0;
-    }
-  };
-
-  // 품질에 따른 재고 반환 헬퍼 함수
-  const getStockForQuality = (item: MarketItem, qualityType: ItemQuality): number => {
-    return item.qualityStock?.[qualityType] || 0;
-  };
-
-  // 현재 선택된 품질의 재고 확인
-  const getCurrentQualityStock = (item: MarketItem): number => {
-    return getStockForQuality(item, quality);
-  };
+  const {
+    selectedTab,
+    selectedItem,
+    quantity,
+    quality,
+    currentCity,
+    marketItems,
+    showDialog,
+    dialogType,
+    dialogTitle,
+    dialogMessage,
+    getQualityColor,
+    getQualityText,
+    getItemQualityEnum,
+    increaseQuantity,
+    decreaseQuantity,
+    handleBuy,
+    handleSell,
+    canTrade,
+    isGoldInsufficient,
+    calculateTotalValue,
+    getStockForQuality,
+    setSelectedTab,
+    setSelectedItem,
+    closeDialog,
+  } = marketLogic;
 
   // 아이템 렌더링
   const renderMarketItem = (item: MarketItem) => {
@@ -247,7 +65,6 @@ const MarketScreen = () => {
         style={[styles.itemContainer, isSelected && styles.selectedItem]}
         onPress={() => {
           setSelectedItem(item.itemId);
-          setQuantity(1);
         }}
         onLongPress={() => {
           setDetailItem(item.itemId);
@@ -284,7 +101,6 @@ const MarketScreen = () => {
     let sellPrice;
 
     if (marketItem) {
-      // 품질 계수를 고려한 판매 가격 계산
       const itemQuality = getItemQualityEnum(inventoryItem.quality);
       sellPrice = calculatePlayerSellingPrice(
         marketItem.currentPrice * QUALITY_FACTORS[itemQuality],
@@ -302,8 +118,8 @@ const MarketScreen = () => {
         style={[styles.itemContainer, isSelected && styles.selectedItem]}
         onPress={() => {
           setSelectedItem(inventoryItem.itemId);
-          setQuantity(1);
-          setQuality(getItemQualityEnum(inventoryItem.quality));
+          marketLogic.setQuantity(1);
+          marketLogic.setQuality(getItemQualityEnum(inventoryItem.quality));
         }}
         onLongPress={() => {
           setDetailItem(inventoryItem.itemId);
@@ -341,35 +157,6 @@ const MarketScreen = () => {
         </View>
       </TouchableOpacity>
     );
-  };
-
-  // 현재 판매 수수료 비율 계산
-  const calculateFeePercentage = () => {
-    // 기본 수수료 20%에서 평판 및 거래 기술 효과 차감
-    const reputationEffect = getReputationEffect();
-    const tradeSkillEffect = getTradeSkillEffect();
-    return Math.max(5, 20 - reputationEffect - tradeSkillEffect);
-  };
-
-  // 평판에 따른 수수료 감소 효과
-  const getReputationEffect = () => {
-    const reputationLevel = state.player.reputation[currentCity.id] || 0;
-    return reputationLevel * 2;
-  };
-
-  // 거래 기술에 따른 수수료 감소 효과
-  const getTradeSkillEffect = () => {
-    const tradeSkillLevel = state.player.skills.trade || 0;
-    return tradeSkillLevel * 1;
-  };
-
-  // 품질 변경 핸들러 - 품질 변경 시 수량 초기화
-  const handleQualityChange = (newQuality: ItemQuality) => {
-    // 다른 품질로 변경될 때만 수량 초기화
-    if (quality !== newQuality) {
-      setQuality(newQuality);
-      setQuantity(1); // 수량 1로 초기화
-    }
   };
 
   return (
@@ -431,7 +218,7 @@ const MarketScreen = () => {
         </View>
       </ImageBackground>
 
-      {/* 아이템 상세 정보 모달 */}
+      {/* 아이템 상세 정보 모달 - 리팩토링: 컴포넌트 분리 */}
       <ItemDetailModal
         visible={showDetailModal}
         onClose={() => setShowDetailModal(false)}
@@ -499,8 +286,7 @@ const MarketScreen = () => {
                         {/* 저급 품질 옵션 */}
                         <TouchableOpacity
                           onPress={() => {
-                            setQuality(ItemQuality.LOW);
-                            setQuantity(1);
+                            marketLogic.handleQualityChange(ItemQuality.LOW);
                           }}
                           style={[
                             modalStyles.qualityOption,
@@ -560,8 +346,7 @@ const MarketScreen = () => {
                         {/* 보통 품질 옵션 */}
                         <TouchableOpacity
                           onPress={() => {
-                            setQuality(ItemQuality.MEDIUM);
-                            setQuantity(1);
+                            marketLogic.handleQualityChange(ItemQuality.MEDIUM);
                           }}
                           style={[
                             modalStyles.qualityOption,
@@ -621,8 +406,7 @@ const MarketScreen = () => {
                         {/* 고급 품질 옵션 */}
                         <TouchableOpacity
                           onPress={() => {
-                            setQuality(ItemQuality.HIGH);
-                            setQuantity(1);
+                            marketLogic.handleQualityChange(ItemQuality.HIGH);
                           }}
                           style={[
                             modalStyles.qualityOption,
@@ -711,23 +495,23 @@ const MarketScreen = () => {
                         </PixelText>
                         <PixelText
                           variant="caption"
-                          style={getReputationEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
+                          style={marketLogic.getReputationEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
                         >
-                          평판 보너스: {getReputationEffect() > 0 ? "-" : ""}
-                          {getReputationEffect()}%
+                          평판 보너스: {marketLogic.getReputationEffect() > 0 ? "-" : ""}
+                          {marketLogic.getReputationEffect()}%
                         </PixelText>
                         <PixelText
                           variant="caption"
-                          style={getTradeSkillEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
+                          style={marketLogic.getTradeSkillEffect() > 0 ? modalStyles.bonusText : modalStyles.normalText}
                         >
-                          거래 기술 보너스: {getTradeSkillEffect() > 0 ? "-" : ""}
-                          {getTradeSkillEffect()}%
+                          거래 기술 보너스: {marketLogic.getTradeSkillEffect() > 0 ? "-" : ""}
+                          {marketLogic.getTradeSkillEffect()}%
                         </PixelText>
                         <PixelText
                           variant="caption"
                           style={{ ...modalStyles.priceInfoText, ...modalStyles.finalFeeText }}
                         >
-                          최종 수수료: {calculateFeePercentage()}%
+                          최종 수수료: {marketLogic.calculateFeePercentage()}%
                         </PixelText>
                       </View>
                     )}
@@ -755,13 +539,13 @@ const MarketScreen = () => {
         </View>
       </Modal>
 
-      {/* 알림 다이얼로그 */}
+      {/* 알림 다이얼로그 - 리팩토링: 컴포넌트 분리 */}
       <NotificationDialog
         visible={showDialog}
         type={dialogType}
         title={dialogTitle}
         message={dialogMessage}
-        onClose={() => setShowDialog(false)}
+        onClose={closeDialog}
       />
     </SafeAreaView>
   );
@@ -921,285 +705,6 @@ const modalStyles = StyleSheet.create({
   },
 });
 
-// MarketScreen.tsx 파일 내에 모달 컴포넌트 추가
-const ItemDetailModal = ({
-  visible,
-  onClose,
-  itemId,
-  cityId,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  itemId: string;
-  cityId: string;
-}) => {
-  const { state } = useGame();
-  const itemInfo = ITEMS[itemId];
-  const city = state.world.cities[cityId];
-
-  if (!visible || !itemInfo || !city) return null;
-
-  // 시장에서 아이템 찾기
-  const marketItem = city.market.items.find((item) => item.itemId === itemId);
-  if (!marketItem) return null;
-
-  // 가격 이력 가져오기
-  const priceHistory = marketItem.priceHistory;
-
-  // 그래프 데이터 생성
-  const graphData = priceHistory.map((entry) => ({
-    date: `${entry[0].month}/${entry[0].day}`,
-    price: entry[1],
-  }));
-
-  // 현재 가격 추가
-  graphData.push({
-    date: "현재",
-    price: marketItem.currentPrice,
-  });
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={itemModalStyles.overlay}>
-        <View style={itemModalStyles.container}>
-          <PixelText variant="subtitle" style={itemModalStyles.title}>
-            {itemInfo.name} 시장 정보
-          </PixelText>
-          <View style={itemModalStyles.infoRow}>
-            <PixelText>현재 가격:</PixelText>
-            <PixelText style={itemModalStyles.priceText}>{formatGold(marketItem.currentPrice)} 골드</PixelText>
-          </View>
-          <View style={itemModalStyles.infoRow}>
-            <PixelText>기본 가격:</PixelText>
-            <PixelText>{formatGold(itemInfo.basePrice)} 골드</PixelText>
-          </View>
-          <View style={itemModalStyles.infoRow}>
-            <PixelText>재고 현황:</PixelText>
-            <PixelText>
-              저급({marketItem.qualityStock.low}) / 보통({marketItem.qualityStock.medium}) / 고급(
-              {marketItem.qualityStock.high})
-            </PixelText>
-          </View>
-          <View style={itemModalStyles.infoRow}>
-            <PixelText>지역 영향:</PixelText>
-            <PixelText>
-              {(itemInfo.regionalFactors[city.regionId] || 0) >= 0 ? "+" : ""}
-              {((itemInfo.regionalFactors[city.regionId] || 0) * 100).toFixed(0)}%
-            </PixelText>
-          </View>
-          <PixelText style={itemModalStyles.graphTitle}>가격 변동 추이</PixelText>
-          {/* 간단한 그래프 표현 */}
-          <View style={itemModalStyles.graph}>
-            {graphData.length > 0 ? (
-              <View style={itemModalStyles.graphContent}>
-                {graphData.map((point, index) => {
-                  // 최대/최소 가격 찾기
-                  const prices = graphData.map((p) => p.price);
-                  const maxPrice = Math.max(...prices);
-                  const minPrice = Math.min(...prices);
-                  const range = maxPrice - minPrice || 1;
-
-                  // 그래프 높이 계산 (60px를 최대 높이로 사용)
-                  const height = 10 + ((point.price - minPrice) / range) * 60;
-
-                  return (
-                    <View key={index} style={itemModalStyles.graphColumn}>
-                      <View
-                        style={[
-                          itemModalStyles.graphBar,
-                          { height, backgroundColor: point.date === "현재" ? COLORS.primary : COLORS.info },
-                        ]}
-                      />
-                      <PixelText variant="caption" style={itemModalStyles.graphLabel}>
-                        {point.date}
-                      </PixelText>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : (
-              <PixelText style={itemModalStyles.noDataText}>가격 이력 데이터가 없습니다</PixelText>
-            )}
-          </View>
-          <Button title="닫기" onPress={onClose} size="medium" style={itemModalStyles.closeButton} />
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-// 아이템 상세 모달 스타일
-const itemModalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    width: "85%",
-    backgroundColor: COLORS.background.dark,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.lg,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    ...SHADOWS.medium,
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: SPACING.lg,
-    color: COLORS.primary,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: SPACING.sm,
-  },
-  priceText: {
-    color: COLORS.primary,
-    fontWeight: "bold",
-  },
-  graphTitle: {
-    marginTop: SPACING.md,
-    marginBottom: SPACING.sm,
-    fontWeight: "bold",
-  },
-  graph: {
-    height: 120,
-    marginBottom: SPACING.lg,
-    borderBottomWidth: 1,
-    borderLeftWidth: 1,
-    borderColor: COLORS.disabled,
-    padding: SPACING.sm,
-  },
-  graphContent: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "flex-end",
-  },
-  graphColumn: {
-    alignItems: "center",
-    width: 30,
-  },
-  graphBar: {
-    width: 20,
-    backgroundColor: COLORS.info,
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
-  },
-  graphLabel: {
-    marginTop: SPACING.xs,
-    fontSize: 8,
-    width: 30,
-    textAlign: "center",
-  },
-  noDataText: {
-    textAlign: "center",
-    marginTop: SPACING.lg,
-    color: COLORS.disabled,
-  },
-  closeButton: {
-    marginTop: SPACING.md,
-  },
-});
-
-// 알림 다이얼로그 컴포넌트
-const NotificationDialog = ({
-  visible,
-  type,
-  title,
-  message,
-  onClose,
-}: {
-  visible: boolean;
-  type: "success" | "error";
-  title: string;
-  message: string;
-  onClose: () => void;
-}) => {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={notificationStyles.overlay}>
-        <View style={notificationStyles.container}>
-          <View
-            style={[
-              notificationStyles.iconContainer,
-              { backgroundColor: type === "success" ? COLORS.berdan : COLORS.danger },
-            ]}
-          >
-            <PixelText variant="subtitle" style={notificationStyles.iconText}>
-              {type === "success" ? "✓" : "✗"}
-            </PixelText>
-          </View>
-
-          <PixelText
-            variant="subtitle"
-            style={{
-              ...notificationStyles.title,
-              color: type === "success" ? COLORS.berdan : COLORS.danger,
-            }}
-          >
-            {title}
-          </PixelText>
-
-          <PixelText style={notificationStyles.message}>{message}</PixelText>
-
-          <Button
-            title="확인"
-            onPress={onClose}
-            type={type === "success" ? "primary" : "secondary"}
-            style={notificationStyles.button}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-// 알림 다이얼로그 스타일
-const notificationStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    width: "80%",
-    backgroundColor: COLORS.background.dark,
-    borderRadius: BORDERS.radius.md,
-    padding: SPACING.lg,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    ...SHADOWS.medium,
-  },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: SPACING.md,
-  },
-  iconText: {
-    color: COLORS.text.light,
-    fontSize: 30,
-  },
-  title: {
-    marginBottom: SPACING.sm,
-    textAlign: "center",
-  },
-  message: {
-    textAlign: "center",
-    marginBottom: SPACING.lg,
-  },
-  button: {
-    minWidth: 120,
-  },
-});
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -1288,26 +793,6 @@ const styles = StyleSheet.create({
     color: COLORS.text.light,
     marginRight: SPACING.xs,
   },
-  qualityBadge: {
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: 2,
-    borderRadius: BORDERS.radius.sm,
-    marginLeft: SPACING.xs,
-  },
-  qualityBadgeText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.text.light,
-    fontWeight: "bold",
-  },
-  lowQuality: {
-    color: COLORS.bronze,
-  },
-  mediumQuality: {
-    color: COLORS.silver,
-  },
-  highQuality: {
-    color: COLORS.gold,
-  },
   itemStats: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1324,11 +809,6 @@ const styles = StyleSheet.create({
   verticalCurrencyContainer: {
     flexDirection: "column",
     alignItems: "center",
-  },
-  qualityText: {
-    fontSize: 10,
-    color: COLORS.text.light,
-    marginBottom: 2,
   },
   itemPrice: {
     fontWeight: "bold",

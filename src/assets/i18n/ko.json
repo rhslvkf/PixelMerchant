@@ -1,0 +1,23 @@
+{
+  "cultures": {
+    "berdan": "베르단",
+    "riona": "리오나",
+    "kragmore": "크라그모어",
+    "sahel": "사헬",
+    "azure": "아주르"
+  },
+  "transport": {
+    "foot": "도보",
+    "cart": "마차",
+    "ship": "배",
+    "special": "특수 운송"
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다",
+    "save": "저장",
+    "cancel": "취소",
+    "confirm": "확인",
+    "back": "뒤로"
+  }
+}

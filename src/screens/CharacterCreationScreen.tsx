@@ -4,9 +4,8 @@ import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import PixelText from "../components/PixelText";
-import { SCREENS } from "../config/constants";
 import { COLORS, SPACING, TYPOGRAPHY } from "../config/theme";
-import { SkillType } from "../models/types";
+import { SkillType } from "../models/index";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 

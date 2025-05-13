@@ -1,7 +1,7 @@
 import { ITEMS } from "../../data/items";
 import { applyPlayerTradeImpact, calculatePlayerSellingPrice, updateCityMarket } from "../../logic/EconomySystem";
 import { calculateInventoryWeight } from "../../logic/InventorySystem";
-import { GameState, ItemQuality, QUALITY_FACTORS, SkillType } from "../../models/types";
+import { GameState, ItemQuality, QUALITY_FACTORS, InventoryItem, SkillType } from "../../models/index";
 import { addItemToInventory } from "../utils/inventoryUtils";
 
 /**
@@ -30,96 +30,66 @@ export function updateMarketReducer(state: GameState, cityId: string): GameState
 }
 
 /**
- * 아이템 구매 리듀서 - 품질별 재고 관리 반영
+ * 거래 유효성 검사 함수
  */
-export function buyItemReducer(
+function validateBuyTransaction(
   state: GameState,
   itemId: string,
   quantity: number,
   cityId: string,
   quality: ItemQuality
-): GameState {
+): { isValid: boolean; marketItem?: any; totalPrice?: number } {
   const city = state.world.cities[cityId];
-
-  if (!city) return state;
+  if (!city) return { isValid: false };
 
   // 아이템 찾기
   const marketItem = city.market.items.find((item) => item.itemId === itemId);
-  if (!marketItem) return state;
+  if (!marketItem) return { isValid: false };
 
   // 선택한 품질의 재고 확인
-  if (marketItem.qualityStock[quality] < quantity) return state;
+  if (marketItem.qualityStock[quality] < quantity) return { isValid: false };
 
   // 품질에 따른 가격 계산
   const qualityFactor = QUALITY_FACTORS[quality];
   const totalPrice = marketItem.currentPrice * quantity * qualityFactor;
 
   // 골드 확인
-  if (state.player.gold < totalPrice) return state;
+  if (state.player.gold < totalPrice) return { isValid: false };
 
   // 무게 확인
   const itemInfo = ITEMS[itemId];
-  if (!itemInfo) return state;
+  if (!itemInfo) return { isValid: false };
 
   const additionalWeight = itemInfo.weight * quantity;
   const currentWeight = calculateInventoryWeight(state.player.inventory, ITEMS);
 
   if (currentWeight + additionalWeight > state.player.maxWeight) {
-    // 무게 초과 시 구매 불가
-    return state;
+    return { isValid: false };
   }
 
-  // 시장 업데이트 - 선택한 품질의 재고만 감소
-  const updatedMarket = applyPlayerTradeImpact(
-    city.market,
-    itemId,
-    quality,
-    -quantity // 구매는 수량 감소
-  );
-
-  // 도시 업데이트
-  const updatedCity = {
-    ...city,
-    market: updatedMarket,
-  };
-
-  // 인벤토리에 아이템 추가 및 골드 감소
-  return {
-    ...state,
-    player: {
-      ...state.player,
-      gold: state.player.gold - totalPrice,
-      inventory: addItemToInventory(state.player.inventory, itemId, quantity, marketItem.currentPrice, qualityFactor),
-    },
-    world: {
-      ...state.world,
-      cities: {
-        ...state.world.cities,
-        [cityId]: updatedCity,
-      },
-    },
-  };
+  return { isValid: true, marketItem, totalPrice };
 }
 
-/**
- * 아이템 판매 리듀서 - 품질별 재고 관리 반영
- */
-export function sellItemReducer(
+function validateSellTransaction(
   state: GameState,
   itemId: string,
   quantity: number,
   cityId: string,
-  inventoryIndex: number // 인벤토리 내 특정 아이템 인덱스 (품질 구분용)
-): GameState {
+  inventoryIndex: number
+): {
+  isValid: boolean;
+  inventoryItem?: InventoryItem;
+  quality?: ItemQuality;
+  marketItem?: any;
+  totalSellValue?: number;
+} {
   const city = state.world.cities[cityId];
+  if (!city) return { isValid: false };
 
-  if (!city) return state;
-
-  // 인벤토리에서 아이템 찾기 (인덱스로 정확한 품질 아이템 참조)
+  // 인벤토리에서 아이템 찾기
   const inventoryItem = state.player.inventory[inventoryIndex];
-
   if (!inventoryItem || inventoryItem.itemId !== itemId || inventoryItem.quantity < quantity) {
-    return state;
+    return { isValid: false };
   }
 
   // 아이템의 품질 파악
@@ -151,17 +121,28 @@ export function sellItemReducer(
 
   const totalSellValue = sellPrice * quantity;
 
-  // 시장 업데이트 - 해당 품질의 재고만 증가
-  let updatedMarket = city.market;
+  return { isValid: true, inventoryItem, quality, marketItem, totalSellValue };
+}
 
-  if (marketItem) {
-    updatedMarket = applyPlayerTradeImpact(
-      city.market,
-      itemId,
-      quality, // 품질 지정
-      quantity // 판매는 수량 증가
-    );
-  }
+/**
+ * 시장 재고 업데이트 함수
+ */
+function updateMarketStock(
+  state: GameState,
+  cityId: string,
+  itemId: string,
+  quality: ItemQuality,
+  quantityChange: number
+): GameState {
+  const city = state.world.cities[cityId];
+
+  // 시장 업데이트
+  const updatedMarket = applyPlayerTradeImpact(
+    city.market,
+    itemId,
+    quality,
+    quantityChange // 구매는 음수, 판매는 양수
+  );
 
   // 도시 업데이트
   const updatedCity = {
@@ -169,6 +150,49 @@ export function sellItemReducer(
     market: updatedMarket,
   };
 
+  return {
+    ...state,
+    world: {
+      ...state.world,
+      cities: {
+        ...state.world.cities,
+        [cityId]: updatedCity,
+      },
+    },
+  };
+}
+
+/**
+ * 플레이어 인벤토리 업데이트 함수 (구매)
+ */
+function updatePlayerInventoryForBuying(
+  state: GameState,
+  itemId: string,
+  quantity: number,
+  price: number,
+  quality: ItemQuality,
+  totalPrice: number
+): GameState {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      gold: state.player.gold - totalPrice,
+      inventory: addItemToInventory(state.player.inventory, itemId, quantity, price, quality),
+    },
+  };
+}
+
+/**
+ * 플레이어 인벤토리 업데이트 함수 (판매)
+ */
+function updatePlayerInventoryForSelling(
+  state: GameState,
+  inventoryIndex: number,
+  quantity: number,
+  totalSellValue: number,
+  inventoryItem: InventoryItem
+): GameState {
   // 인벤토리에서 아이템 제거
   let updatedInventory = [...state.player.inventory];
 
@@ -207,12 +231,67 @@ export function sellItemReducer(
       skills: updatedSkills,
       stats: updatedStats,
     },
-    world: {
-      ...state.world,
-      cities: {
-        ...state.world.cities,
-        [cityId]: updatedCity,
-      },
-    },
   };
+}
+
+/**
+ * 아이템 구매 리듀서 - 품질별 재고 관리 반영
+ */
+export function buyItemReducer(
+  state: GameState,
+  itemId: string,
+  quantity: number,
+  cityId: string,
+  quality: ItemQuality
+): GameState {
+  // 거래 유효성 검사
+  const validation = validateBuyTransaction(state, itemId, quantity, cityId, quality);
+  if (!validation.isValid) return state;
+
+  // 시장 재고 업데이트 (구매는 수량 감소 = 음수)
+  let updatedState = updateMarketStock(state, cityId, itemId, quality, -quantity);
+
+  // 플레이어 인벤토리와 골드 업데이트
+  updatedState = updatePlayerInventoryForBuying(
+    updatedState,
+    itemId,
+    quantity,
+    validation.marketItem!.currentPrice,
+    quality,
+    validation.totalPrice!
+  );
+
+  return updatedState;
+}
+
+/**
+ * 아이템 판매 리듀서 - 품질별 재고 관리 반영
+ */
+export function sellItemReducer(
+  state: GameState,
+  itemId: string,
+  quantity: number,
+  cityId: string,
+  inventoryIndex: number // 인벤토리 내 특정 아이템 인덱스 (품질 구분용)
+): GameState {
+  // 거래 유효성 검사
+  const validation = validateSellTransaction(state, itemId, quantity, cityId, inventoryIndex);
+  if (!validation.isValid) return state;
+
+  // 시장 재고 업데이트 (판매는 수량 증가 = 양수)
+  let updatedState = state;
+  if (validation.marketItem) {
+    updatedState = updateMarketStock(state, cityId, itemId, validation.quality!, quantity);
+  }
+
+  // 플레이어 인벤토리와 골드 업데이트
+  updatedState = updatePlayerInventoryForSelling(
+    updatedState,
+    inventoryIndex,
+    quantity,
+    validation.totalSellValue!,
+    validation.inventoryItem!
+  );
+
+  return updatedState;
 }

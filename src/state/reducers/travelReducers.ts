@@ -1,6 +1,6 @@
-import { GameState, TransportType } from "../../models/types";
-import { createTravelRoute, generateTravelEvents, calculateArrivalDate } from "../../logic/TravelSystem";
 import { advanceDate } from "../../logic/DateSystem";
+import { calculateArrivalDate, createTravelRoute, generateTravelEvents } from "../../logic/TravelSystem";
+import { GameState, TransportType } from "../../models/index";
 
 /**
  * 도시 이동 리듀서

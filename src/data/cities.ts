@@ -1,4 +1,4 @@
-import { City, Region, Market, TransportType, Season, MarketItem } from "../models/types";
+import { City, Market, MarketItem, Region, Season, TransportType } from "../models/index";
 import { ITEMS, ITEM_KEYS } from "./items";
 
 // 지역 데이터

@@ -1,4 +1,4 @@
-import { Item, ItemCategory, Season } from "../models/types";
+import { Item, ItemCategory, Season } from "../models/index";
 
 export const ITEM_KEYS = {
   WHEAT: "wheat",

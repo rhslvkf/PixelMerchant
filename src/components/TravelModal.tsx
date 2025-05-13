@@ -1,24 +1,15 @@
 import React from "react";
 import { Modal, View, StyleSheet, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { COLORS, SPACING, SHADOWS, BORDERS } from "../config/theme";
 import Button from "./Button";
 import PixelText from "./PixelText";
-import { City, TravelConnection } from "../models/types";
-import { AppNavigationProp } from "../navigation/types";
-import { REGIONS } from "../data/cities";
-import { getTransportName } from "../utils/localization";
-import { formatRating } from "../utils/formatting";
+import DestinationCard, { TravelDestination } from "./travel/DestinationCard";
+import { useTravelOptions } from "../hooks/useTravelOptions";
 
 // 상수 추출
 const MODAL_BACKGROUND_OPACITY = 0.7;
 const MODAL_WIDTH_PERCENTAGE = "90%";
 const MODAL_MAX_HEIGHT_PERCENTAGE = "80%";
-
-interface TravelDestination {
-  city: City;
-  connection: TravelConnection;
-}
 
 interface TravelModalProps {
   visible: boolean;
@@ -26,49 +17,12 @@ interface TravelModalProps {
   destinations: TravelDestination[];
 }
 
-// 도시 정보 표시 서브 컴포넌트
-interface DestinationCardProps {
-  destination: TravelDestination;
-  onTravel: (destinationId: string) => void;
-}
-
-const DestinationCard = ({ destination, onTravel }: DestinationCardProps) => (
-  <View style={styles.travelDestination}>
-    <View style={styles.destinationInfo}>
-      <PixelText style={styles.destinationName}>{destination.city.name}</PixelText>
-
-      <PixelText variant="caption" style={styles.destinationRegion}>
-        {REGIONS[destination.city.regionId]?.name || destination.city.regionId}
-      </PixelText>
-
-      <View style={styles.cityStats}>
-        <PixelText variant="caption">규모: {formatRating(destination.city.size)}</PixelText>
-        <PixelText variant="caption" style={styles.wealthStat}>
-          부유함: {formatRating(destination.city.wealthLevel)}
-        </PixelText>
-      </View>
-
-      <View style={styles.destinationDetails}>
-        <PixelText variant="caption">
-          거리: {destination.connection.distance} • 위험도: {formatRating(destination.connection.dangerLevel)}
-        </PixelText>
-
-        <PixelText variant="caption">
-          이동 수단: {destination.connection.transportOptions.map(getTransportName).join(", ")}
-        </PixelText>
-      </View>
-    </View>
-    <Button title="여행" size="small" onPress={() => onTravel(destination.city.id)} />
-  </View>
-);
-
 const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
-  const navigation = useNavigation<AppNavigationProp>();
-
-  const handleTravel = (destinationId: string) => {
-    onClose();
-    navigation.navigate("Travel", { destination: destinationId });
-  };
+  // 커스텀 훅으로 로직 분리
+  const { handleTravel, noDestinationsAvailable } = useTravelOptions({
+    destinations,
+    onClose,
+  });
 
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
@@ -83,7 +37,7 @@ const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
               <DestinationCard key={index} destination={item} onTravel={handleTravel} />
             ))}
 
-            {destinations.length === 0 && (
+            {noDestinationsAvailable && (
               <PixelText style={styles.noDestinations}>이용 가능한 여행 목적지가 없습니다.</PixelText>
             )}
           </ScrollView>
@@ -93,13 +47,6 @@ const TravelModal = ({ visible, onClose, destinations }: TravelModalProps) => {
       </View>
     </Modal>
   );
-};
-
-// 공통 스타일 속성
-const cardStyle = {
-  borderRadius: BORDERS.radius.md,
-  borderWidth: 1,
-  ...SHADOWS.light,
 };
 
 const styles = StyleSheet.create({
@@ -126,38 +73,6 @@ const styles = StyleSheet.create({
   },
   destinationList: {
     maxHeight: 400,
-  },
-  travelDestination: {
-    ...cardStyle,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: COLORS.secondary,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    borderColor: COLORS.berdan,
-  },
-  destinationInfo: {
-    flex: 1,
-    marginRight: SPACING.md,
-  },
-  destinationName: {
-    fontWeight: "bold",
-    marginBottom: SPACING.xs,
-    color: COLORS.primary,
-  },
-  destinationRegion: {
-    marginBottom: SPACING.xs,
-  },
-  cityStats: {
-    flexDirection: "row",
-    marginBottom: SPACING.xs,
-  },
-  wealthStat: {
-    marginLeft: SPACING.md,
-  },
-  destinationDetails: {
-    marginTop: SPACING.xs,
   },
   noDestinations: {
     textAlign: "center",

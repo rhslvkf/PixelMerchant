@@ -1,13 +1,76 @@
-import {
-  GameEvent,
-  EventTriggerCondition,
-  Player,
-  GameDate,
-  EventOutcome,
-  EventEffect,
-  SkillType,
-  City,
-} from "../models/types";
+import { City, EventEffect, EventOutcome, GameDate, GameEvent, Player } from "../models/index";
+
+/**
+ * 위치 조건 확인
+ */
+function checkLocationRequirements(event: GameEvent, currentCity: City): boolean {
+  const { triggerConditions } = event;
+
+  if (!triggerConditions.locations) return true;
+
+  return (
+    triggerConditions.locations.includes(currentCity.id) || triggerConditions.locations.includes(currentCity.regionId)
+  );
+}
+
+/**
+ * 평판 조건 확인
+ */
+function checkReputationRequirements(event: GameEvent, player: Player): boolean {
+  const { triggerConditions } = event;
+
+  if (!triggerConditions.minReputation) return true;
+
+  for (const [factionId, minLevel] of Object.entries(triggerConditions.minReputation)) {
+    const playerRep = player.reputation[factionId] || 0;
+    if (playerRep < minLevel) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * 아이템 조건 확인
+ */
+function checkItemRequirements(event: GameEvent, player: Player): boolean {
+  const { triggerConditions } = event;
+
+  if (!triggerConditions.requiredItems) return true;
+
+  for (const itemId of triggerConditions.requiredItems) {
+    const hasItem = player.inventory.some((invItem) => invItem.itemId === itemId);
+    if (!hasItem) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * 계절 조건 확인
+ */
+function checkSeasonalRequirements(event: GameEvent, currentDate: GameDate): boolean {
+  const { triggerConditions } = event;
+
+  if (!triggerConditions.seasonalFactors) return true;
+
+  return triggerConditions.seasonalFactors.includes(currentDate.season);
+}
+
+/**
+ * 플레이어 진행도 조건 확인
+ */
+function checkProgressRequirements(event: GameEvent, player: Player): boolean {
+  const { triggerConditions } = event;
+
+  if (triggerConditions.playerProgressLevel === undefined) return true;
+
+  const playerProgress = calculatePlayerProgress(player);
+  return playerProgress >= triggerConditions.playerProgressLevel;
+}
 
 /**
  * 이벤트 발생 조건 확인
@@ -24,52 +87,17 @@ export function checkEventTriggerConditions(
   currentDate: GameDate,
   currentCity: City
 ): boolean {
-  const { triggerConditions } = event;
+  // 위치 조건 확인 - 조기 반환
+  if (!checkLocationRequirements(event, currentCity)) return false;
 
-  // 위치 조건 확인
-  if (
-    triggerConditions.locations &&
-    !triggerConditions.locations.includes(currentCity.id) &&
-    !triggerConditions.locations.includes(currentCity.regionId)
-  ) {
-    return false;
-  }
-
-  // 평판 조건 확인
-  if (triggerConditions.minReputation) {
-    for (const [factionId, minLevel] of Object.entries(triggerConditions.minReputation)) {
-      const playerRep = player.reputation[factionId] || 0;
-      if (playerRep < minLevel) {
-        return false;
-      }
-    }
-  }
-
-  // 아이템 조건 확인
-  if (triggerConditions.requiredItems) {
-    for (const itemId of triggerConditions.requiredItems) {
-      const hasItem = player.inventory.some((invItem) => invItem.itemId === itemId);
-      if (!hasItem) {
-        return false;
-      }
-    }
-  }
-
-  // 계절 조건 확인
-  if (triggerConditions.seasonalFactors && !triggerConditions.seasonalFactors.includes(currentDate.season)) {
-    return false;
-  }
-
-  // 플레이어 진행도 조건 확인
-  if (triggerConditions.playerProgressLevel !== undefined) {
-    const playerProgress = calculatePlayerProgress(player);
-    if (playerProgress < triggerConditions.playerProgressLevel) {
-      return false;
-    }
-  }
+  // 각 조건을 별도 함수로 분리하여 가독성 향상
+  if (!checkReputationRequirements(event, player)) return false;
+  if (!checkItemRequirements(event, player)) return false;
+  if (!checkSeasonalRequirements(event, currentDate)) return false;
+  if (!checkProgressRequirements(event, player)) return false;
 
   // 최종 확률 체크
-  return Math.random() * 100 <= triggerConditions.chance;
+  return Math.random() * 100 <= event.triggerConditions.chance;
 }
 
 /**
