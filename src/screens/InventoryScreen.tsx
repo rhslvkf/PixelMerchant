@@ -1,14 +1,15 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { Alert, FlatList, ImageBackground, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { FlatList, ImageBackground, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
+import ConfirmationModal from "../components/ConfirmationModal";
 import PixelText from "../components/PixelText";
 import InventoryItemComponent from "../components/inventory/InventoryItem";
-import { BORDERS, COLORS, SHADOWS, SPACING } from "../config/theme";
+import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { ITEMS } from "../data/items";
 import { useInventory } from "../hooks/useInventory";
-import { ItemCategory } from "../models";
+import { InventoryItem, ItemCategory } from "../models";
 import { AppNavigationProp } from "../navigation/types";
 
 const InventoryScreen = () => {
@@ -35,6 +36,11 @@ const InventoryScreen = () => {
 
   const [showDetails, setShowDetails] = useState(false);
   const [dropQuantity, setDropQuantity] = useState(1);
+  const [showDropConfirmation, setShowDropConfirmation] = useState(false);
+  const [itemToDrop, setItemToDrop] = useState<{ item: InventoryItem | null; quantity: number }>({
+    item: null,
+    quantity: 1,
+  });
 
   // 카테고리 목록 생성
   const categories = Object.values(ItemCategory).filter((category) =>
@@ -93,6 +99,25 @@ const InventoryScreen = () => {
                 </View>
               </View>
 
+              <View style={styles.quantityControl}>
+                <PixelText variant="caption">버릴 수량:</PixelText>
+                <View style={styles.quantityButtons}>
+                  <Button
+                    title="-"
+                    onPress={() => setDropQuantity(Math.max(1, dropQuantity - 1))}
+                    size="small"
+                    style={styles.quantityButton}
+                  />
+                  <PixelText style={styles.quantityText}>{dropQuantity}</PixelText>
+                  <Button
+                    title="+"
+                    onPress={() => setDropQuantity(Math.min(selectedItem.quantity, dropQuantity + 1))}
+                    size="small"
+                    style={styles.quantityButton}
+                  />
+                </View>
+              </View>
+
               <View style={styles.actionButtons}>
                 <Button
                   title="사용"
@@ -108,18 +133,12 @@ const InventoryScreen = () => {
                 <Button
                   title="버리기"
                   onPress={() => {
-                    Alert.alert("아이템 버리기", `${itemInfo.name} ${dropQuantity}개를 버리시겠습니까?`, [
-                      { text: "취소", style: "cancel" },
-                      {
-                        text: "확인",
-                        onPress: () => {
-                          handleDropItem(selectedItem, dropQuantity);
-                          setShowDetails(false);
-                          setSelectedItem(null);
-                        },
-                        style: "destructive",
-                      },
-                    ]);
+                    setItemToDrop({
+                      item: selectedItem,
+                      quantity: dropQuantity,
+                    });
+                    setShowDropConfirmation(true);
+                    setShowDetails(false);
                   }}
                   type="danger"
                   size="medium"
@@ -132,6 +151,33 @@ const InventoryScreen = () => {
           </View>
         </View>
       </Modal>
+    );
+  };
+
+  const renderDropConfirmationModal = () => {
+    if (!itemToDrop.item) return null;
+
+    const itemInfo = ITEMS[itemToDrop.item.itemId];
+    if (!itemInfo) return null;
+
+    return (
+      <ConfirmationModal
+        visible={showDropConfirmation}
+        title="아이템 버리기"
+        message={`${itemInfo.name} ${itemToDrop.quantity}개를 버리시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="버리기"
+        cancelText="취소"
+        onConfirm={() => {
+          if (itemToDrop.item) {
+            handleDropItem(itemToDrop.item, itemToDrop.quantity);
+            setSelectedItem(null);
+          }
+          setShowDropConfirmation(false);
+        }}
+        onCancel={() => {
+          setShowDropConfirmation(false);
+        }}
+      />
     );
   };
 
@@ -253,6 +299,7 @@ const InventoryScreen = () => {
         </View>
 
         {renderItemDetailModal()}
+        {renderDropConfirmationModal()}
       </ImageBackground>
     </SafeAreaView>
   );
@@ -410,6 +457,31 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: SPACING.xs,
+  },
+  quantityControl: {
+    alignItems: "center",
+    marginVertical: SPACING.md,
+    backgroundColor: `${COLORS.secondary}50`,
+    padding: SPACING.sm,
+    borderRadius: BORDERS.radius.sm,
+  },
+  quantityButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: SPACING.xs,
+  },
+  quantityButton: {
+    width: 45,
+    height: 45,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  quantityText: {
+    marginHorizontal: SPACING.md,
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontWeight: "bold",
+    minWidth: 30,
+    textAlign: "center",
   },
 });
 
