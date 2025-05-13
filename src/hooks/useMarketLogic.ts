@@ -224,13 +224,12 @@ export const useMarketLogic = (): MarketLogic => {
     const itemId = selectedItem;
     const itemQuantity = quantity;
     const itemName = ITEMS[itemId]?.name;
-    const resetItem = inventoryItem.quantity <= quantity;
 
-    // 즉시 UI 상태 업데이트하여 사용자에게 피드백 제공
-    const localSelectedItem = selectedItem; // 변수에 현재 상태 저장
-    if (resetItem) {
-      setSelectedItem(null); // 모든 아이템을 팔았다면 모달 닫기
-    }
+    // 판매 금액 기록을 위한 데이터 캡처
+    const sellAmount = calculateTotalValue();
+
+    // 부분 수량이든 전체 수량이든 모달을 항상 닫음
+    setSelectedItem(null);
 
     // 데이터 처리를 최적화된 시점에 수행
     requestAnimationFrame(() => {
@@ -245,11 +244,28 @@ export const useMarketLogic = (): MarketLogic => {
         },
       });
 
-      // 중요: 판매 완료 후 상태 초기화
+      // 수량 초기화
       setQuantity(1);
 
-      // 즉시 알림 표시 (다른 UI 갱신 후)
-      showNotification("success", "판매 성공", `${itemName} ${itemQuantity}개를 판매했습니다.`);
+      // 판매 알림 표시 - 금액 정보 추가
+      const goldAmount = Math.floor(sellAmount);
+      const silverAmount = Math.floor((sellAmount % 1) * 100);
+
+      let amountText = "";
+      if (goldAmount > 0) {
+        amountText += `${goldAmount}골드`;
+        if (silverAmount > 0) {
+          amountText += ` ${silverAmount}실버`;
+        }
+      } else if (silverAmount > 0) {
+        amountText = `${silverAmount}실버`;
+      }
+
+      showNotification(
+        "success",
+        "판매 성공",
+        `${itemName} ${itemQuantity}개를 판매하여 ${amountText}를 획득했습니다.`
+      );
     });
   };
 
