@@ -3,6 +3,7 @@ import { useGame } from "../state/GameContext";
 import { calculatePlayerSellingPrice } from "../logic/EconomySystem";
 import { ITEMS } from "../data/items";
 import { InventoryItem, ItemQuality, MarketItem, QUALITY_FACTORS } from "../models";
+import { InteractionManager } from "react-native";
 
 interface MarketLogic {
   // 상태
@@ -81,12 +82,15 @@ export const useMarketLogic = (): MarketLogic => {
     setQuantity(1);
   }, [selectedTab]);
 
-  // 다이얼로그 표시 함수
+  // 다이얼로그 표시 함수 - 더 직접적인 방식으로 수정
   const showNotification = (type: "success" | "error", title: string, message: string) => {
-    setDialogType(type);
-    setDialogTitle(title);
-    setDialogMessage(message);
-    setShowDialog(true);
+    // 모든 애니메이션과 상호작용이 완료된 후 실행
+    InteractionManager.runAfterInteractions(() => {
+      setDialogType(type);
+      setDialogTitle(title);
+      setDialogMessage(message);
+      setShowDialog(true);
+    });
   };
 
   // 다이얼로그 닫기
@@ -142,7 +146,7 @@ export const useMarketLogic = (): MarketLogic => {
     }
   };
 
-  // 아이템 구매
+  // 아이템 구매 - 거래 완료와 알림 시점 최적화
   const handleBuy = () => {
     if (!selectedItem) return;
 
@@ -166,23 +170,37 @@ export const useMarketLogic = (): MarketLogic => {
       return;
     }
 
-    // 구매 액션 디스패치
-    dispatch({
-      type: "BUY_ITEM",
-      payload: {
-        itemId: selectedItem,
-        quantity,
-        cityId: state.currentCityId,
-        quality, // ItemQuality 타입으로 전달
-      },
-    });
+    // 구매를 위한 로컬 데이터 준비
+    const itemId = selectedItem;
+    const itemQuantity = quantity;
+    const itemName = ITEMS[itemId]?.name;
 
-    showNotification("success", "구매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 구매했습니다.`);
-    setSelectedItem(null);
-    setQuantity(1);
+    // 즉시 UI 상태 업데이트하여 사용자에게 피드백 제공
+    const localSelectedItem = selectedItem; // 변수에 현재 상태 저장
+    setSelectedItem(null); // 즉시 모달 닫기
+
+    // 데이터 처리를 최적화된 시점에 수행
+    requestAnimationFrame(() => {
+      // 구매 액션 디스패치
+      dispatch({
+        type: "BUY_ITEM",
+        payload: {
+          itemId,
+          quantity: itemQuantity,
+          cityId: state.currentCityId,
+          quality,
+        },
+      });
+
+      // 중요: 구매 완료 후 상태 초기화
+      setQuantity(1);
+
+      // 즉시 알림 표시 (다른 UI 갱신 후)
+      showNotification("success", "구매 성공", `${itemName} ${itemQuantity}개를 구매했습니다.`);
+    });
   };
 
-  // 아이템 판매
+  // 아이템 판매 - 거래 완료와 알림 시점 최적화
   const handleSell = () => {
     if (!selectedItem) return;
 
@@ -202,24 +220,37 @@ export const useMarketLogic = (): MarketLogic => {
       return;
     }
 
-    // 판매 액션 디스패치
-    dispatch({
-      type: "SELL_ITEM",
-      payload: {
-        itemId: selectedItem,
-        quantity,
-        cityId: state.currentCityId,
-        inventoryIndex: inventoryItemIndex, // 정확한 인벤토리 아이템 인덱스 전달
-      },
-    });
+    // 판매를 위한 로컬 데이터 준비
+    const itemId = selectedItem;
+    const itemQuantity = quantity;
+    const itemName = ITEMS[itemId]?.name;
+    const resetItem = inventoryItem.quantity <= quantity;
 
-    showNotification("success", "판매 성공", `${ITEMS[selectedItem]?.name} ${quantity}개를 판매했습니다.`);
-
-    // 판매 후 수량이 0이 되면 선택 초기화, 아니면 수량만 초기화
-    if (inventoryItem.quantity <= quantity) {
-      setSelectedItem(null);
+    // 즉시 UI 상태 업데이트하여 사용자에게 피드백 제공
+    const localSelectedItem = selectedItem; // 변수에 현재 상태 저장
+    if (resetItem) {
+      setSelectedItem(null); // 모든 아이템을 팔았다면 모달 닫기
     }
-    setQuantity(1);
+
+    // 데이터 처리를 최적화된 시점에 수행
+    requestAnimationFrame(() => {
+      // 판매 액션 디스패치
+      dispatch({
+        type: "SELL_ITEM",
+        payload: {
+          itemId,
+          quantity: itemQuantity,
+          cityId: state.currentCityId,
+          inventoryIndex: inventoryItemIndex,
+        },
+      });
+
+      // 중요: 판매 완료 후 상태 초기화
+      setQuantity(1);
+
+      // 즉시 알림 표시 (다른 UI 갱신 후)
+      showNotification("success", "판매 성공", `${itemName} ${itemQuantity}개를 판매했습니다.`);
+    });
   };
 
   // 거래 버튼 활성화 여부

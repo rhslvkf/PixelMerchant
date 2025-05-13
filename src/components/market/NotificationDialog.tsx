@@ -1,5 +1,5 @@
-import React from "react";
-import { Modal, StyleSheet, View } from "react-native";
+import React, { memo } from "react";
+import { Modal, StyleSheet, View, Animated, Easing } from "react-native";
 import { BORDERS, COLORS, SHADOWS, SPACING } from "../../config/theme";
 import PixelText from "../PixelText";
 import Button from "../Button";
@@ -12,14 +12,57 @@ interface NotificationDialogProps {
   onClose: () => void;
 }
 
-const NotificationDialog = ({ visible, type, title, message, onClose }: NotificationDialogProps) => {
+// React.memo로 컴포넌트를 감싸서 불필요한 리렌더링 방지
+const NotificationDialog = memo(({ visible, type, title, message, onClose }: NotificationDialogProps) => {
+  // 애니메이션 값
+  const [fadeAnim] = React.useState(new Animated.Value(0));
+  const [scaleAnim] = React.useState(new Animated.Value(0.9));
+
+  // 모달이 보이면 애니메이션 시작
+  React.useEffect(() => {
+    if (visible) {
+      // 애니메이션 값 초기화
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.9);
+
+      // 애니메이션 실행
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+      ]).start();
+    }
+  }, [visible, fadeAnim, scaleAnim]);
+
+  // 성능 최적화를 위해 상수 값을 미리 계산
+  const backgroundColor = type === "success" ? COLORS.berdan : COLORS.danger;
+  const textColor = type === "success" ? COLORS.berdan : COLORS.danger;
+  const buttonType = type === "success" ? "primary" : "secondary";
+  const iconText = type === "success" ? "✓" : "✗";
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <View style={[styles.iconContainer, { backgroundColor: type === "success" ? COLORS.berdan : COLORS.danger }]}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <View style={[styles.iconContainer, { backgroundColor }]}>
             <PixelText variant="subtitle" style={styles.iconText}>
-              {type === "success" ? "✓" : "✗"}
+              {iconText}
             </PixelText>
           </View>
 
@@ -27,7 +70,7 @@ const NotificationDialog = ({ visible, type, title, message, onClose }: Notifica
             variant="subtitle"
             style={{
               ...styles.title,
-              color: type === "success" ? COLORS.berdan : COLORS.danger,
+              color: textColor,
             }}
           >
             {title}
@@ -35,17 +78,12 @@ const NotificationDialog = ({ visible, type, title, message, onClose }: Notifica
 
           <PixelText style={styles.message}>{message}</PixelText>
 
-          <Button
-            title="확인"
-            onPress={onClose}
-            type={type === "success" ? "primary" : "secondary"}
-            style={styles.button}
-          />
-        </View>
-      </View>
+          <Button title="확인" onPress={onClose} type={buttonType} style={styles.button} />
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
-};
+});
 
 const styles = StyleSheet.create({
   overlay: {
