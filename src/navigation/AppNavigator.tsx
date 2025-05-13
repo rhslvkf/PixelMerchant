@@ -9,7 +9,7 @@ import CityScreen from "../screens/CityScreen";
 import HomeScreen from "../screens/HomeScreen";
 import MarketScreen from "../screens/MarketScreen";
 import SplashScreen from "../screens/SplashScreen";
-
+import TravelScreen from "../screens/TravelScreen";
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
@@ -21,6 +21,7 @@ const AppNavigator = () => {
         <Stack.Screen name={SCREENS.CHARACTER_CREATION} component={CharacterCreationScreen} />
         <Stack.Screen name={SCREENS.CITY} component={CityScreen} />
         <Stack.Screen name={SCREENS.MARKET} component={MarketScreen} />
+        <Stack.Screen name={SCREENS.TRAVEL} component={TravelScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

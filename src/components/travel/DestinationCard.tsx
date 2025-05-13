@@ -44,7 +44,7 @@ const DestinationCard = ({ destination, onTravel }: DestinationCardProps) => (
         </PixelText>
       </View>
     </View>
-    <Button title="여행" size="small" onPress={() => onTravel(destination.city.id)} />
+    <Button title="여행" size="medium" style={styles.travelButton} onPress={() => onTravel(destination.city.id)} />
   </View>
 );
 
@@ -87,6 +87,10 @@ const styles = StyleSheet.create({
   },
   destinationDetails: {
     marginTop: SPACING.xs,
+  },
+  travelButton: {
+    minWidth: 80,
+    minHeight: 44,
   },
 });
 

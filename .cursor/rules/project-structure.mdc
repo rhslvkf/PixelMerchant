@@ -1,27 +1,29 @@
 ---
-description:
-globs:
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 # PixelMerchant 프로젝트 구조
 
-PixelMerchant는 React Native 기반의 픽셀 아트 상인 시뮬레이션 게임입니다. 이 문서는 프로젝트의 주요 구조와 디렉토리에 대한 설명을 제공합니다.
+PixelMerchant는 React Native로 개발된 상인 시뮬레이션 게임입니다. 이 문서는 프로젝트의 주요 구조와 디렉토리에 대한 설명을 제공합니다.
 
-## 주요 디렉토리 구조
+## 핵심 디렉토리 구조
 
-- `src/`: 소스 코드의 루트 디렉토리
-  - `components/`: 재사용 가능한 UI 컴포넌트
-  - `screens/`: 앱의 각 화면 컴포넌트
-  - `navigation/`: 화면 간 네비게이션 관련 코드
-  - `state/`: 상태 관리 로직 (Context API 사용)
-  - `config/`: 앱 설정 및 테마 정의
-  - `data/`: 게임 데이터 (아이템, 도시 정보 등)
-  - `logic/`: 게임 메커니즘 관련 로직
-  - `utils/`: 유틸리티 함수
-  - `storage/`: 로컬 저장소 관련 코드
-  - `models/`: 데이터 모델 정의
-  - `services/`: 외부 서비스 연동 코드
-  - `assets/`: 이미지, 사운드 등 정적 자산
+- `src/components` - UI 컴포넌트들
+- `src/screens` - 게임의 주요 화면 컴포넌트
+- `src/models` - 타입 정의 및 인터페이스
+- `src/state` - 상태 관리 (GameContext, reducers)
+- `src/logic` - 게임 비즈니스 로직
+- `src/data` - 게임 데이터 (아이템, 도시 등)
+- `src/utils` - 유틸리티 기능
+- `src/assets` - 이미지, 국제화 파일 등의 리소스
+- `src/config` - 테마, 상수 등의 설정
+
+## 주요 파일
+
+- [src/models/index.ts](mdc:src/models/index.ts) - 모든 모델 타입들을 내보내는 인덱스 파일
+- [src/state/GameContext.tsx](mdc:src/state/GameContext.tsx) - 게임 상태 관리 컨텍스트
+- [src/state/reducers/index.ts](mdc:src/state/reducers/index.ts) - 메인 게임 리듀서
 
 ## 코딩 스타일 가이드
 
@@ -37,3 +39,74 @@ PixelMerchant는 React Native 기반의 픽셀 아트 상인 시뮬레이션 게
 - 컴포넌트 간 간격은 `SPACING` 상수 사용
 - 테두리 스타일은 `BORDERS` 상수 사용
 - 그림자 효과는 `SHADOWS` 상수 사용
+
+# 상태 관리 및 리듀서 패턴
+
+게임은 React Context API와 리듀서 패턴을 사용해 상태를 관리합니다.
+
+## 주요 개념
+
+- GameContext - 전체 게임 상태를 관리하는 컨텍스트
+- GameState - 게임의 전체 상태를 표현하는 타입
+- GameAction - 가능한 모든 액션 타입을 정의
+
+## 주요 파일
+
+- [src/state/GameContext.tsx](mdc:src/state/GameContext.tsx) - 게임 컨텍스트 정의
+- [src/state/types.ts](mdc:src/state/types.ts) - 액션 타입 정의
+- [src/state/reducers/index.ts](mdc:src/state/reducers/index.ts) - 메인 리듀서 함수
+
+## 리듀서 구조
+
+게임 리듀서는 다양한 도메인별 리듀서로 분리되어 있습니다:
+- playerReducers - 플레이어 관련 액션
+- marketReducers - 시장 및 거래 관련 액션
+- travelReducers - 여행 관련 액션
+- gameReducers - 게임 상태 관리 액션
+
+# 게임 로직 시스템
+
+게임의 핵심 비즈니스 로직은 `src/logic` 디렉토리에 있습니다.
+
+## 주요 시스템
+
+- EconomySystem - 경제 시스템 및 시장 가격 계산
+- EventSystem - 게임 이벤트 트리거 및 결과 처리
+- DateSystem - 게임 내 날짜 및 시간 관리
+- InventorySystem - 인벤토리 관리 및 계산
+
+## 주요 파일
+
+- [src/logic/EconomySystem.ts](mdc:src/logic/EconomySystem.ts) - 시장 및 경제 시스템
+- [src/logic/EventSystem.ts](mdc:src/logic/EventSystem.ts) - 이벤트 트리거 조건 및 효과 처리
+- [src/logic/InventorySystem.ts](mdc:src/logic/InventorySystem.ts) - 인벤토리 관련 유틸리티
+
+## 로직 설계 원칙
+
+- 순수 함수 지향
+- 관심사 분리
+- 단일 책임 원칙에 따른 함수 설계
+- 예외 상황에 대한 방어적 코딩
+
+# 국제화 및 현지화 시스템
+
+게임은 i18next 라이브러리를 사용한 국제화 기능을 지원합니다.
+
+## 국제화 구조
+
+- `assets/i18n/` - 언어별 JSON 파일 저장
+  - `ko.json` - 한국어 번역
+  - `en.json` - 영어 번역
+
+## 주요 파일
+
+- [src/utils/i18n.ts](mdc:src/utils/i18n.ts) - i18next 초기화 및 설정
+- [src/utils/localization.ts](mdc:src/utils/localization.ts) - 지역화 유틸리티 함수
+- [src/hooks/useLocalization.ts](mdc:src/hooks/useLocalization.ts) - 지역화 커스텀 훅
+
+## 사용 패턴
+
+컴포넌트에서는 `useLocalization` 훅을 사용해 번역 기능을 사용합니다:
+```tsx
+const { t, getCultureName, getTransportName } = useLocalization();
+```

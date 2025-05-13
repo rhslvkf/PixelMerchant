@@ -6,7 +6,7 @@ type TextVariant = "title" | "subtitle" | "body" | "caption";
 
 interface PixelTextProps {
   children: React.ReactNode;
-  style?: TextStyle;
+  style?: TextStyle | TextStyle[] | any;
   variant?: TextVariant;
   color?: string;
 }
