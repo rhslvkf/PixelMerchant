@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState, useMemo } from "react";
-import { ImageBackground, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import PixelText from "../components/PixelText";
@@ -152,10 +152,18 @@ const CityScreen = () => {
             </PixelText>
             <PixelText variant="caption">{currentRegion.name}</PixelText>
           </View>
+
           <View style={styles.headerRight}>
-            <PixelText>
-              <PixelText style={styles.goldText}>{state.player.gold}</PixelText> 골드
-            </PixelText>
+            <View style={styles.currencyContainer}>
+              <View style={styles.currencyItem}>
+                <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+                <PixelText style={styles.goldText}>{Math.floor(state.player.gold)}</PixelText>
+              </View>
+              <View style={styles.currencyItem}>
+                <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
+                <PixelText style={styles.silverText}>{Math.floor((state.player.gold % 1) * 100)}</PixelText>
+              </View>
+            </View>
             <PixelText variant="caption">
               {dateString} ({seasonName})
             </PixelText>
@@ -311,6 +319,24 @@ const styles = StyleSheet.create({
   footerButton: {
     flex: 1,
     marginHorizontal: SPACING.xs,
+  },
+  currencyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+  },
+  currencyItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  coinIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 4,
+  },
+  silverText: {
+    color: COLORS.silver,
+    fontWeight: "bold",
   },
 });
 

@@ -828,6 +828,7 @@ const styles = StyleSheet.create({
   currencyContainer: {
     flexDirection: "row",
     alignItems: "center",
+    gap: SPACING.sm,
   },
   currencyItem: {
     flexDirection: "row",
