@@ -3,6 +3,8 @@ import { StyleSheet, View } from "react-native";
 import { BORDERS, COLORS, SPACING } from "../../config/theme";
 import { SkillType } from "../../models";
 import PixelText from "../PixelText";
+import { useGame } from "../../state/GameContext";
+import { calculateExpForNextLevel } from "../../logic/SkillSystem";
 
 interface SkillBarProps {
   skill: SkillType;
@@ -11,6 +13,12 @@ interface SkillBarProps {
 }
 
 const SkillBar: React.FC<SkillBarProps> = ({ skill, level, maxLevel = 10 }) => {
+  // 게임 상태에서 경험치 정보 가져오기
+  const { state } = useGame();
+  const skillExperience = state.player.skillExperience || {};
+  const currentExp = skillExperience[skill] || 0;
+  const nextLevelExp = calculateExpForNextLevel(level);
+
   // 스킬 이름 매핑
   const skillNames: Record<SkillType, string> = {
     [SkillType.TRADE]: "거래",
@@ -47,8 +55,8 @@ const SkillBar: React.FC<SkillBarProps> = ({ skill, level, maxLevel = 10 }) => {
     }
   })();
 
-  // 진행률 계산
-  const progress = (level / maxLevel) * 100;
+  // 경험치 진행률 계산 (0-100%)
+  const expProgress = nextLevelExp > 0 ? Math.min(100, (currentExp / nextLevelExp) * 100) : 0;
 
   // 스킬별 색상 테마
   const getSkillColor = (skillType: SkillType): string => {
@@ -82,8 +90,11 @@ const SkillBar: React.FC<SkillBarProps> = ({ skill, level, maxLevel = 10 }) => {
       </View>
 
       <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: skillColor }]} />
+        <View style={[styles.progressBar, { width: `${expProgress}%`, backgroundColor: skillColor }]} />
       </View>
+      <PixelText variant="caption" style={styles.expText}>
+        경험치: {currentExp}/{nextLevelExp}
+      </PixelText>
 
       <PixelText variant="caption" style={styles.description}>
         {skillDescriptions[skill]}
@@ -120,6 +131,10 @@ const styles = StyleSheet.create({
   progressBar: {
     height: "100%",
     borderRadius: BORDERS.radius.sm,
+  },
+  expText: {
+    textAlign: "right",
+    marginBottom: SPACING.xs,
   },
   description: {
     marginBottom: SPACING.xs,

@@ -9,6 +9,7 @@ export interface Player {
   inventory: InventoryItem[];
   maxWeight: number; // 최대 적재 용량 추가
   skills: Record<SkillType, number>;
+  skillExperience: Record<SkillType, number>;
   reputation: Record<string, number>;
   stats: PlayerStats;
 }

@@ -73,20 +73,36 @@ export function addSkillExperienceReducer(state: GameState, skill: SkillType, am
   // 기존 스킬 레벨
   const currentLevel = state.player.skills[skill] || 1;
 
-  // 임시 스킬 경험치 객체 생성
-  const skillExp: SkillExperience = {
-    level: currentLevel,
-    currentExp: 0, // 현재는 경험치를 저장하지 않으므로 0에서 시작
-    nextLevelExp: calculateExpForNextLevel(currentLevel),
-  };
+  // 현재 누적 경험치 (player.skillExperience 필드가 없으면 생성)
+  const skillExperience = state.player.skillExperience || {};
+  const currentExp = skillExperience[skill] || 0;
 
-  // 경험치 추가 및 레벨업 처리
-  const updatedSkillExp = addSkillExp(skillExp, amount);
+  // 다음 레벨에 필요한 경험치
+  const nextLevelExp = calculateExpForNextLevel(currentLevel);
 
-  // 스킬 레벨 업데이트
+  // 새 경험치 계산
+  const newExp = currentExp + amount;
+
+  // 레벨업 여부 확인
+  let newLevel = currentLevel;
+  let remainingExp = newExp;
+
+  // 경험치가 다음 레벨에 필요한 양을 넘으면 레벨업
+  if (remainingExp >= nextLevelExp) {
+    remainingExp -= nextLevelExp;
+    newLevel = currentLevel + 1;
+  }
+
+  // 업데이트된 스킬 레벨
   const updatedSkills = {
     ...state.player.skills,
-    [skill]: updatedSkillExp.level,
+    [skill]: newLevel,
+  };
+
+  // 업데이트된 경험치
+  const updatedSkillExperience = {
+    ...skillExperience,
+    [skill]: remainingExp,
   };
 
   return {
@@ -94,28 +110,8 @@ export function addSkillExperienceReducer(state: GameState, skill: SkillType, am
     player: {
       ...state.player,
       skills: updatedSkills,
+      skillExperience: updatedSkillExperience,
     },
-  };
-}
-
-/**
- * 스킬 경험치 추가 로직
- */
-function addSkillExp(skillExp: SkillExperience, amount: number): SkillExperience {
-  const newExp = skillExp.currentExp + amount;
-  let newLevel = skillExp.level;
-  let remainingExp = newExp;
-
-  // 레벨업 확인
-  while (remainingExp >= skillExp.nextLevelExp) {
-    remainingExp -= skillExp.nextLevelExp;
-    newLevel += 1;
-  }
-
-  return {
-    level: newLevel,
-    currentExp: remainingExp,
-    nextLevelExp: calculateExpForNextLevel(newLevel),
   };
 }
 

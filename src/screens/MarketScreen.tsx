@@ -141,16 +141,16 @@ const MarketScreen = () => {
         </View>
         <View style={styles.itemPriceContainer}>
           <View style={styles.verticalCurrencyContainer}>
-            {Math.floor(sellPrice) > 0 && (
+            {Math.round(sellPrice) > 0 && (
               <View style={styles.currencyItem}>
                 <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
-                <PixelText style={styles.goldText}>{Math.floor(sellPrice)}</PixelText>
+                <PixelText style={styles.goldText}>{Math.round(sellPrice)}</PixelText>
               </View>
             )}
-            {Math.floor((sellPrice % 1) * 100) > 0 && (
+            {Math.round((sellPrice % 1) * 100) > 0 && (
               <View style={styles.currencyItem}>
                 <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
-                <PixelText style={styles.silverText}>{Math.floor((sellPrice % 1) * 100)}</PixelText>
+                <PixelText style={styles.silverText}>{Math.round((sellPrice % 1) * 100)}</PixelText>
               </View>
             )}
           </View>
@@ -172,11 +172,11 @@ const MarketScreen = () => {
           <View style={styles.currencyContainer}>
             <View style={styles.currencyItem}>
               <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
-              <PixelText style={styles.goldText}>{Math.floor(state.player.gold)}</PixelText>
+              <PixelText style={styles.goldText}>{Math.round(state.player.gold)}</PixelText>
             </View>
             <View style={styles.currencyItem}>
               <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
-              <PixelText style={styles.silverText}>{Math.floor((state.player.gold % 1) * 100)}</PixelText>
+              <PixelText style={styles.silverText}>{Math.round((state.player.gold % 1) * 100)}</PixelText>
             </View>
           </View>
         </View>
@@ -472,13 +472,13 @@ const MarketScreen = () => {
                         총 가치:
                       </PixelText>
                       <View style={modalStyles.coinValueContainer}>
-                        {Math.floor(calculateTotalValue()) > 0 && (
+                        {Math.round(calculateTotalValue()) > 0 && (
                           <View style={styles.currencyItem}>
                             <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
-                            <PixelText style={styles.goldText}>{Math.floor(calculateTotalValue())}</PixelText>
+                            <PixelText style={styles.goldText}>{Math.round(calculateTotalValue())}</PixelText>
                           </View>
                         )}
-                        {Math.floor((calculateTotalValue() % 1) * 100) > 0 && (
+                        {Math.round((calculateTotalValue() % 1) * 100) > 0 && (
                           <View style={styles.currencyItem}>
                             <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
                             <PixelText style={styles.silverText}>
