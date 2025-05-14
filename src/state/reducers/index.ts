@@ -1,22 +1,23 @@
 import { GameState } from "../../models/index";
 import { GameAction } from "../types";
+import { addEventReducer, processEventChoiceReducer, progressEventReducer, removeEventReducer } from "./eventReducers";
+import { loadGameReducer, updateSettingsReducer } from "./gameReducers";
+import { buyItemReducer, sellItemReducer, updateMarketReducer } from "./marketReducers";
 import {
-  startNewGameReducer,
-  updateGoldReducer,
   addItemToInventoryReducer,
-  removeItemFromInventoryReducer,
   addSkillExperienceReducer,
+  removeItemFromInventoryReducer,
+  startNewGameReducer,
   updateFactionReputationReducer,
+  updateGoldReducer,
 } from "./playerReducers";
-import { updateMarketReducer, buyItemReducer, sellItemReducer } from "./marketReducers";
 import {
-  travelToCityReducer,
-  startTravelReducer,
-  progressTravelReducer,
   completeTravelReducer,
   processTravelEventReducer,
+  progressTravelReducer,
+  startTravelReducer,
+  travelToCityReducer,
 } from "./travelReducers";
-import { updateSettingsReducer, loadGameReducer } from "./gameReducers";
 
 /**
  * 각 액션 타입에 맞는 리듀서 함수를 매핑한 객체
@@ -118,6 +119,26 @@ const reducerMap = {
   UPDATE_FACTION_REPUTATION: (state: GameState, action: GameAction): GameState => {
     if (action.type !== "UPDATE_FACTION_REPUTATION") return state;
     return updateFactionReputationReducer(state, action.payload.factionId, action.payload.points);
+  },
+
+  PROGRESS_EVENT: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "PROGRESS_EVENT") return state;
+    return progressEventReducer(state, action.payload.eventId);
+  },
+
+  PROCESS_EVENT_CHOICE: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "PROCESS_EVENT_CHOICE") return state;
+    return processEventChoiceReducer(state, action.payload.eventId, action.payload.choiceId, action.payload.eventData);
+  },
+
+  ADD_EVENT: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "ADD_EVENT") return state;
+    return addEventReducer(state, action.payload.event);
+  },
+
+  REMOVE_EVENT: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "REMOVE_EVENT") return state;
+    return removeEventReducer(state, action.payload.eventId);
   },
 };
 

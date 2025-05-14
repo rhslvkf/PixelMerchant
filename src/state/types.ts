@@ -1,4 +1,4 @@
-import { GameSettings, GameState, ItemQuality, SkillType, TransportType } from "../models/index";
+import { GameEvent, GameSettings, GameState, ItemQuality, SkillType, TransportType } from "../models/index";
 
 // 액션 타입 정의
 export type GameAction =
@@ -20,7 +20,27 @@ export type GameAction =
   | { type: "COMPLETE_TRAVEL" }
   | { type: "PROCESS_TRAVEL_EVENT"; payload: { eventId: string; outcome: any } }
   | { type: "ADD_SKILL_EXPERIENCE"; payload: { skill: SkillType; amount: number } }
-  | { type: "UPDATE_FACTION_REPUTATION"; payload: { factionId: string; points: number } };
+  | { type: "UPDATE_FACTION_REPUTATION"; payload: { factionId: string; points: number } }
+  | { type: "PROGRESS_EVENT"; payload: { eventId: string } }
+  | {
+      type: "PROCESS_EVENT_CHOICE";
+      payload: {
+        eventId: string;
+        choiceId: string;
+        eventData: GameEvent;
+      };
+    }
+  | {
+      type: "ADD_EVENT";
+      payload: {
+        event: {
+          id: string;
+          eventId: string;
+          type: "travel" | "city" | "story" | "trade";
+        };
+      };
+    }
+  | { type: "REMOVE_EVENT"; payload: { eventId: string } };
 
 // Context 타입 정의
 export interface GameContextType {

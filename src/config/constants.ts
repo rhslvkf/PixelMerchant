@@ -21,5 +21,6 @@ export enum SCREENS {
   TRAVEL = "Travel",
   INVENTORY = "Inventory",
   CHARACTER = "Character",
+  EVENT = "Event",
   SETTINGS = "Settings",
 }
