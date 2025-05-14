@@ -74,8 +74,7 @@ const EventScreen = () => {
     const eventTypeMap = {
       travel: require("../assets/images/travel_background.webp"),
       city: require("../assets/images/cities/default_city_bg.webp"),
-      // story: require("../assets/images/event_background.webp"),
-      story: require("../assets/images/travel_background.webp"),
+      story: require("../assets/images/event_background.webp"),
       trade: require("../assets/images/market_background.webp"),
     };
 
