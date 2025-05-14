@@ -325,7 +325,7 @@ const getTravelDescription = (transport: TransportType): string => {
   };
 
   const options = descriptions[transport] || descriptions[TransportType.FOOT];
-  return options[Math.floor(Math.random() * options.length)];
+  return options[Math.round(Math.random() * options.length)];
 };
 
 const styles = StyleSheet.create({

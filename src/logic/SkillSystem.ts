@@ -28,7 +28,7 @@ export function createDetailedSkills(skills: Record<SkillType, number>): Detaile
  */
 export function calculateExpForNextLevel(currentLevel: number): number {
   // 간단한 레벨업 공식: 100 * 현재레벨^1.5
-  return Math.floor(100 * Math.pow(currentLevel, 1.5));
+  return Math.round(100 * Math.pow(currentLevel, 1.5));
 }
 
 /**

@@ -248,8 +248,8 @@ export const useMarketLogic = (): MarketLogic => {
       setQuantity(1);
 
       // 판매 알림 표시 - 금액 정보 추가
-      const goldAmount = Math.floor(sellAmount);
-      const silverAmount = Math.floor((sellAmount % 1) * 100);
+      const goldAmount = Math.round(sellAmount);
+      const silverAmount = Math.round((sellAmount % 1) * 100);
 
       let amountText = "";
       if (goldAmount > 0) {
@@ -344,7 +344,7 @@ export const useMarketLogic = (): MarketLogic => {
   // 거래 기술에 따른 수수료 감소 효과
   const getTradeSkillEffect = (): number => {
     const tradeSkillLevel = state.player.skills.trade || 0;
-    return tradeSkillLevel * 1;
+    return tradeSkillLevel * 2;
   };
 
   // 품질 변경 핸들러 - 품질 변경 시 수량 초기화

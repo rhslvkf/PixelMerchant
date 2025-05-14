@@ -1,4 +1,4 @@
-import { Item, MarketItem, City, GameDate, Season, Market, Player, ItemQuality } from "../models";
+import { Item, MarketItem, City, GameDate, Season, Market, Player, ItemQuality, SkillType } from "../models";
 
 /**
  * 상품 가격 계산 함수
@@ -122,15 +122,15 @@ function updateStockLevels(
   wealthLevel: number
 ): { low: number; medium: number; high: number } {
   const isSpecialty = city.specialties.includes(item.itemId);
-  const baseQuantity = 10 + Math.floor(city.size * 5 * (1 + (isSpecialty ? 0.5 : 0)));
+  const baseQuantity = 10 + Math.round(city.size * 5 * (1 + (isSpecialty ? 0.5 : 0)));
 
   // 품질 분포 계산
   const qualityDistribution = calculateQualityDistribution(wealthLevel, isSpecialty);
 
   // 품질별 재고 계산
-  const lowStock = Math.max(2, Math.floor(baseQuantity * qualityDistribution.low));
-  const mediumStock = Math.max(3, Math.floor(baseQuantity * qualityDistribution.medium));
-  const highStock = Math.max(1, Math.floor(baseQuantity * qualityDistribution.high));
+  const lowStock = Math.max(2, Math.round(baseQuantity * qualityDistribution.low));
+  const mediumStock = Math.max(3, Math.round(baseQuantity * qualityDistribution.medium));
+  const highStock = Math.max(1, Math.round(baseQuantity * qualityDistribution.high));
 
   return {
     low: lowStock,
@@ -251,7 +251,7 @@ export function applyPlayerTradeImpact(market: Market, itemId: string, quality: 
   const totalStock = Object.values(updatedItem.qualityStock).reduce((sum, val) => sum + val, 0);
 
   // 시장 영향력 계산 (재고의 20% 이상 거래시 영향)
-  const impactThreshold = Math.max(1, Math.floor(totalStock * 0.2));
+  const impactThreshold = Math.max(1, Math.round(totalStock * 0.2));
   const hasSignificantImpact = Math.abs(quantity) >= impactThreshold;
 
   if (hasSignificantImpact) {
@@ -286,8 +286,8 @@ export function calculatePlayerSellingPrice(marketPrice: number, player: Player,
   spreadPercentage -= reputationLevel * 2;
 
   // 거래 기술에 따른 스프레드 감소
-  const tradeSkillLevel = player.skills.trade || 0;
-  spreadPercentage -= tradeSkillLevel * 1;
+  const tradeSkillLevel = player.skills[SkillType.TRADE] || 0;
+  spreadPercentage -= tradeSkillLevel * 2;
 
   // 최소 스프레드 적용 (최소 5%)
   spreadPercentage = Math.max(5, spreadPercentage);

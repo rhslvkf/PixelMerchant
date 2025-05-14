@@ -46,7 +46,7 @@ export function startTravelReducer(state: GameState, toCityId: string, transport
   const routeWithEvents = generateTravelEvents(
     route,
     state.currentDate,
-    Math.max(1, Math.floor(Object.values(state.player.skills).reduce((sum, val) => sum + val, 0) / 5))
+    Math.max(1, Math.round(Object.values(state.player.skills).reduce((sum, val) => sum + val, 0) / 5))
   );
 
   // 도착 날짜 계산

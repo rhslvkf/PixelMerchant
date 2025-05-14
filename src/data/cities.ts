@@ -63,8 +63,8 @@ const createInitialMarket = (cityId: string, specialties: string[] = []): Market
       const baseQuantity = isSpecialty ? 30 : 10;
 
       // 품질별 재고 계산
-      const lowStock = Math.floor(baseQuantity * 0.3); // 30%
-      const highStock = Math.floor(baseQuantity * 0.2); // 20%
+      const lowStock = Math.round(baseQuantity * 0.3); // 30%
+      const highStock = Math.round(baseQuantity * 0.2); // 20%
       const mediumStock = baseQuantity - lowStock - highStock; // 나머지
 
       return {

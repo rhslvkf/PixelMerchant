@@ -244,9 +244,9 @@ export function getRandomEvent(
   if (eligibleEvents.length === 0) {
     // 기본 이벤트들 중 하나를 선택
     const defaultEvents = ["merchant_caravan", "storm_warning"];
-    return defaultEvents[Math.floor(Math.random() * defaultEvents.length)];
+    return defaultEvents[Math.round(Math.random() * defaultEvents.length)];
   }
 
   // 무작위로 하나 선택
-  return eligibleEvents[Math.floor(Math.random() * eligibleEvents.length)].id;
+  return eligibleEvents[Math.round(Math.random() * eligibleEvents.length)].id;
 }

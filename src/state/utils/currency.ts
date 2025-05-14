@@ -13,7 +13,7 @@ export function goldToGoldSilver(amount: number): Currency {
   }
 
   // 골드와 실버 분리 (1G = 100S)
-  const gold = Math.floor(amount);
+  const gold = Math.round(amount);
   const silver = Math.round((amount - gold) * 100);
 
   // 실버가 100이면 골드로 변환

@@ -482,7 +482,7 @@ const MarketScreen = () => {
                           <View style={styles.currencyItem}>
                             <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
                             <PixelText style={styles.silverText}>
-                              {Math.floor((calculateTotalValue() % 1) * 100)}
+                              {Math.round((calculateTotalValue() % 1) * 100)}
                             </PixelText>
                           </View>
                         )}
@@ -525,9 +525,32 @@ const MarketScreen = () => {
                       style={modalStyles.cancelButton}
                     />
                     <Button
-                      title={selectedTab === "buy" ? (isGoldInsufficient() ? "재화 부족" : "구매") : "판매"}
+                      title={
+                        selectedTab === "buy"
+                          ? isGoldInsufficient()
+                            ? "재화 부족"
+                            : quantity >
+                              getStockForQuality(
+                                marketItems.find((i) => i.itemId === selectedItem) ||
+                                  ({ qualityStock: {} } as MarketItem),
+                                quality
+                              )
+                            ? "재고 부족"
+                            : "구매"
+                          : "판매"
+                      }
                       onPress={selectedTab === "buy" ? handleBuy : handleSell}
-                      disabled={!canTrade || (selectedTab === "buy" && isGoldInsufficient())}
+                      disabled={
+                        !canTrade ||
+                        (selectedTab === "buy" &&
+                          (isGoldInsufficient() ||
+                            quantity >
+                              getStockForQuality(
+                                marketItems.find((i) => i.itemId === selectedItem) ||
+                                  ({ qualityStock: {} } as MarketItem),
+                                quality
+                              )))
+                      }
                       type={selectedTab === "buy" ? "primary" : "secondary"}
                       style={modalStyles.tradeButton}
                     />

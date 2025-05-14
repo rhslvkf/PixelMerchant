@@ -3,6 +3,7 @@ import { applyPlayerTradeImpact, calculatePlayerSellingPrice, updateCityMarket }
 import { calculateInventoryWeight } from "../../logic/InventorySystem";
 import { GameState, ItemQuality, QUALITY_FACTORS, InventoryItem, SkillType } from "../../models/index";
 import { addItemToInventory } from "../utils/inventoryUtils";
+import { addSkillExperienceReducer } from "./playerReducers";
 
 /**
  * 도시 시장 업데이트 리듀서
@@ -214,21 +215,12 @@ function updatePlayerInventoryForSelling(
     totalProfit: state.player.stats.totalProfit + (totalSellValue - inventoryItem.purchasePrice * quantity),
   };
 
-  // 스킬 경험치 획득 (거래 기술)
-  let updatedSkills = { ...state.player.skills };
-  const tradeSkillExp = Math.ceil(totalSellValue / 50); // 판매액 기준 경험치
-
-  if (updatedSkills[SkillType.TRADE]) {
-    updatedSkills[SkillType.TRADE] += Math.min(0.1, tradeSkillExp / 100); // 최대 0.1 레벨 상승
-  }
-
   return {
     ...state,
     player: {
       ...state.player,
       gold: state.player.gold + totalSellValue,
       inventory: updatedInventory,
-      skills: updatedSkills,
       stats: updatedStats,
     },
   };
@@ -293,5 +285,7 @@ export function sellItemReducer(
     validation.inventoryItem!
   );
 
-  return updatedState;
+  // 스킬 경험치 추가 - 리듀서 체인 방식으로 변경
+  const tradeSkillExp = Math.ceil(validation.totalSellValue! / 50); // 판매액 기준 경험치
+  return addSkillExperienceReducer(updatedState, SkillType.TRADE, tradeSkillExp);
 }

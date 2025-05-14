@@ -157,11 +157,11 @@ const CityScreen = () => {
             <View style={styles.currencyContainer}>
               <View style={styles.currencyItem}>
                 <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
-                <PixelText style={styles.goldText}>{Math.floor(state.player.gold)}</PixelText>
+                <PixelText style={styles.goldText}>{Math.round(state.player.gold)}</PixelText>
               </View>
               <View style={styles.currencyItem}>
                 <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
-                <PixelText style={styles.silverText}>{Math.floor((state.player.gold % 1) * 100)}</PixelText>
+                <PixelText style={styles.silverText}>{Math.round((state.player.gold % 1) * 100)}</PixelText>
               </View>
             </View>
             <PixelText variant="caption">
