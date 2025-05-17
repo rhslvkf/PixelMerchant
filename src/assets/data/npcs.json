@@ -1,0 +1,365 @@
+{
+  "marcus_gold": {
+    "id": "marcus_gold",
+    "name": "마커스 골드",
+    "type": "MERCHANT",
+    "portraitId": "merchant_male_1",
+    "description": "황금의 길에서 수십 년간 행상을 해온 노련한 상인입니다. 베르단 제국과 특별한 거래 파트너십을 맺고 있습니다.",
+    "baseLocation": "royal_market",
+    "availableLocations": ["royal_market", "golden_harbor"],
+    "reputation": 0,
+    "specialties": ["silk", "gemstones", "wine"],
+    "dialogues": [
+      {
+        "id": "marcus_greeting",
+        "text": "안녕하세요, 여행자님. 마커스 골드라고 합니다. 베르단 제국 최고의 상인 중 한 명이죠. 어떤 품목에 관심이 있으신가요?",
+        "choices": [
+          {
+            "id": "ask_about_goods",
+            "text": "어떤 상품을 취급하시나요?",
+            "nextDialogueId": "marcus_goods",
+            "reputation": 1
+          },
+          {
+            "id": "ask_about_market",
+            "text": "이곳 시장 상황은 어떤가요?",
+            "nextDialogueId": "marcus_market",
+            "reputation": 1
+          },
+          {
+            "id": "ask_about_trade",
+            "text": "특별한 거래를 제안하고 싶습니다.",
+            "nextDialogueId": "marcus_trade",
+            "conditions": [{ "type": "reputation", "target": "marcus_gold", "value": 2, "operator": "gte" }]
+          },
+          {
+            "id": "end_conversation",
+            "text": "지금은 괜찮습니다. 나중에 다시 찾아뵙겠습니다.",
+            "reputation": 0
+          }
+        ]
+      },
+      {
+        "id": "marcus_goods",
+        "text": "저는 주로 고급 물품을 취급합니다. 비단, 보석, 그리고 최상급 포도주죠. 제국 내에서 품질을 보증할 수 있는 몇 안 되는 상인 중 하나랍니다.",
+        "choices": [
+          {
+            "id": "ask_more_silk",
+            "text": "비단에 대해 더 알려주세요.",
+            "nextDialogueId": "marcus_silk",
+            "reputation": 1
+          },
+          {
+            "id": "ask_more_gemstones",
+            "text": "보석의 품질은 어떻게 판단하나요?",
+            "nextDialogueId": "marcus_gemstones",
+            "reputation": 1
+          },
+          {
+            "id": "back_to_greeting",
+            "text": "다른 질문이 있습니다.",
+            "nextDialogueId": "marcus_greeting"
+          }
+        ]
+      },
+      {
+        "id": "marcus_market",
+        "text": "요즘 베르단 시장은 특히 활발합니다. 제국과 리오나 연합 사이의 무역 협정이 체결된 이후로 교역량이 30% 이상 증가했죠. 특히 사치품 수요가 급증하고 있습니다.",
+        "choices": [
+          {
+            "id": "ask_price_trends",
+            "text": "어떤 품목의 가격이 오르고 있나요?",
+            "nextDialogueId": "marcus_price_trends",
+            "reputation": 1
+          },
+          {
+            "id": "back_to_greeting",
+            "text": "다른 주제로 돌아가겠습니다.",
+            "nextDialogueId": "marcus_greeting"
+          }
+        ]
+      },
+      {
+        "id": "marcus_trade",
+        "text": "특별한 거래라... 흥미롭군요. 당신과 같은 유능한 상인과는 언제나 기꺼이 거래할 준비가 되어 있습니다. 무엇을 제안하시겠어요?",
+        "choices": [
+          {
+            "id": "trade_special_silk",
+            "text": "고품질 비단을 구매하고 싶습니다.",
+            "nextDialogueId": "marcus_silk_trade",
+            "conditions": [{ "type": "gold", "target": "player", "value": 500, "operator": "gte" }]
+          },
+          {
+            "id": "trade_special_information",
+            "text": "무역로에 대한 정보를 얻고 싶습니다.",
+            "nextDialogueId": "marcus_trade_info",
+            "conditions": [{ "type": "gold", "target": "player", "value": 300, "operator": "gte" }]
+          },
+          {
+            "id": "back_to_greeting",
+            "text": "다시 생각해보겠습니다.",
+            "nextDialogueId": "marcus_greeting"
+          }
+        ]
+      },
+      {
+        "id": "marcus_silk",
+        "text": "비단은 예술이자 과학입니다. 최고급 비단은 리오나 연합의 미스트우드에서 생산됩니다. 하지만 제가 특별한 관계를 맺고 있는 공급자들 덕분에, 가장 좋은 품질의 비단을 항상 확보하고 있죠.",
+        "choices": [
+          {
+            "id": "ask_silk_prices",
+            "text": "비단 가격은 어떻게 변동되나요?",
+            "nextDialogueId": "marcus_silk_prices",
+            "effects": [{ "type": "flag", "target": "knows_silk_market", "value": "true", "operation": "set" }]
+          },
+          {
+            "id": "back_to_goods",
+            "text": "다른 상품에 대해 물어보겠습니다.",
+            "nextDialogueId": "marcus_goods"
+          }
+        ]
+      },
+      {
+        "id": "marcus_gemstones",
+        "text": "보석의 품질은 색상, 명료도, 무게, 그리고 가공 상태로 판단합니다. 제가 취급하는 보석은 모두 크라그모어 산맥 최고의 보석세공사들이 검증한 것들이랍니다.",
+        "choices": [
+          {
+            "id": "ask_gem_market",
+            "text": "보석 시장의 동향은 어떤가요?",
+            "nextDialogueId": "marcus_gem_market",
+            "effects": [{ "type": "flag", "target": "knows_gem_market", "value": "true", "operation": "set" }]
+          },
+          {
+            "id": "back_to_goods",
+            "text": "다른 상품에 대해 물어보겠습니다.",
+            "nextDialogueId": "marcus_goods"
+          }
+        ]
+      },
+      {
+        "id": "marcus_price_trends",
+        "text": "최근에는 비단과 보석 가격이 꾸준히 오르고 있습니다. 특히 겨울이 다가오면서 비단 수요가 증가하고 있죠. 그리고 제국 귀족들의 보석 수요는 언제나 높습니다.",
+        "choices": [
+          {
+            "id": "ask_recommendation",
+            "text": "투자하기 좋은 품목을 추천해주시겠어요?",
+            "nextDialogueId": "marcus_recommendation",
+            "reputation": 2,
+            "conditions": [{ "type": "reputation", "target": "marcus_gold", "value": 1, "operator": "gte" }]
+          },
+          {
+            "id": "back_to_greeting",
+            "text": "유용한 정보 감사합니다.",
+            "nextDialogueId": "marcus_greeting",
+            "reputation": 1
+          }
+        ]
+      },
+      {
+        "id": "marcus_recommendation",
+        "text": "믿을 수 있는 분께만 알려드리는 정보입니다만, 다음 달 로열마켓 축제에 맞춰 고급 포도주 가격이 급등할 것으로 예상됩니다. 지금 투자하시면 좋은 수익을 얻으실 수 있을 겁니다.",
+        "choices": [
+          {
+            "id": "thank_for_tip",
+            "text": "귀중한 정보 감사합니다. 꼭 활용하겠습니다.",
+            "nextDialogueId": "marcus_greeting",
+            "reputation": 2,
+            "effects": [{ "type": "flag", "target": "knows_wine_opportunity", "value": "true", "operation": "set" }]
+          }
+        ]
+      },
+      {
+        "id": "marcus_silk_trade",
+        "text": "최상급 비단을 찾고 계시는군요. 우연히도 방금 새로운 물량이 들어왔습니다. 평소보다 조금 높은 가격이지만, 이 품질은 다른 곳에서 찾기 힘들 겁니다. 500골드에 3개 드리겠습니다. 어떠세요?",
+        "choices": [
+          {
+            "id": "accept_silk_trade",
+            "text": "좋습니다. 구매하겠습니다.",
+            "effects": [
+              { "type": "gold", "target": "player", "value": -500, "operation": "add" },
+              { "type": "item", "target": "silk", "value": 3, "operation": "add" },
+              { "type": "reputation", "target": "marcus_gold", "value": 1, "operation": "add" }
+            ]
+          },
+          {
+            "id": "decline_silk_trade",
+            "text": "지금은 필요하지 않을 것 같습니다.",
+            "nextDialogueId": "marcus_greeting"
+          }
+        ]
+      },
+      {
+        "id": "marcus_trade_info",
+        "text": "무역로 정보라... 최근 크라그모어 산맥의 스톤게이트를 통해 새로운 무역로가 열렸다는 소식이 있습니다. 위험하지만 보상이 큰 경로죠. 300골드면 상세한 정보를 제공해드릴 수 있습니다.",
+        "choices": [
+          {
+            "id": "accept_info_trade",
+            "text": "정보를 구매하겠습니다.",
+            "effects": [
+              { "type": "gold", "target": "player", "value": -300, "operation": "add" },
+              { "type": "flag", "target": "knows_secret_route", "value": "true", "operation": "set" },
+              { "type": "reputation", "target": "marcus_gold", "value": 1, "operation": "add" }
+            ],
+            "nextDialogueId": "marcus_route_info"
+          },
+          {
+            "id": "decline_info_trade",
+            "text": "지금은 괜찮습니다.",
+            "nextDialogueId": "marcus_greeting"
+          }
+        ]
+      },
+      {
+        "id": "marcus_route_info",
+        "text": "현명한 선택입니다. 스톤게이트에서 동쪽으로 3일 이동하면 '에메랄드 협곡'이라는 숨겨진 무역 중심지가 있습니다. 그곳에서는 희귀한 향신료와 보석이 일반 시장보다 훨씬 저렴하게 거래됩니다. 물론 위험하지만, 그만한 가치가 있죠.",
+        "choices": [
+          {
+            "id": "thank_for_route",
+            "text": "귀중한 정보 감사합니다. 꼭 방문해보겠습니다.",
+            "nextDialogueId": "marcus_greeting",
+            "reputation": 1
+          }
+        ]
+      },
+      {
+        "id": "marcus_silk_prices",
+        "text": "비단 가격은 계절에 크게 영향을 받습니다. 겨울에는 수요가 증가해 가격이 20-30% 상승하죠. 또한 로열마켓의 비단은 품질이 좋아 기본 가격도 높은 편입니다.",
+        "choices": [
+          {
+            "id": "back_to_silk",
+            "text": "이해했습니다. 다른 것이 궁금합니다.",
+            "nextDialogueId": "marcus_silk"
+          }
+        ]
+      },
+      {
+        "id": "marcus_gem_market",
+        "text": "보석 시장은 상당히 안정적입니다. 가격 변동이 적지만, 특별한 이벤트나 귀족들의 수요에 따라 급등할 때도 있죠. 특히 크라그모어 산맥의 보석은 희소성 때문에 가치가 계속 상승하는 추세입니다.",
+        "choices": [
+          {
+            "id": "back_to_gemstones",
+            "text": "알려주셔서 감사합니다.",
+            "nextDialogueId": "marcus_gemstones"
+          }
+        ]
+      }
+    ],
+    "trades": [
+      {
+        "id": "premium_silk",
+        "itemId": "silk",
+        "quality": "HIGH",
+        "quantityAvailable": 3,
+        "priceMultiplier": 1.2,
+        "reputationRequired": 2,
+        "restockDays": 7
+      },
+      {
+        "id": "premium_wine",
+        "itemId": "wine",
+        "quality": "HIGH",
+        "quantityAvailable": 5,
+        "priceMultiplier": 1.1,
+        "reputationRequired": 1,
+        "restockDays": 5
+      },
+      {
+        "id": "premium_gemstones",
+        "itemId": "gemstones",
+        "quality": "HIGH",
+        "quantityAvailable": 2,
+        "priceMultiplier": 1.3,
+        "reputationRequired": 3,
+        "restockDays": 10
+      }
+    ],
+    "schedule": [
+      {
+        "locationId": "royal_market",
+        "daysOfWeek": [1, 2, 3],
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "locationId": "golden_harbor",
+        "daysOfWeek": [4, 5, 6, 7],
+        "seasons": ["spring", "summer", "fall", "winter"]
+      }
+    ]
+  },
+  "lyra_silverbrook": {
+    "id": "lyra_silverbrook",
+    "name": "라이라 실버브룩",
+    "type": "INFORMANT",
+    "portraitId": "female_informant_1",
+    "description": "실버타이드의 영향력 있는 정보상. 항구의 모든 소문과 거래 정보를 귀에 담고 있다.",
+    "baseLocation": "silver_tide",
+    "availableLocations": ["silver_tide", "mistwood"],
+    "reputation": 0,
+    "specialties": ["information", "map"],
+    "dialogues": [
+      {
+        "id": "lyra_greeting",
+        "text": "흥미로운 분이 오셨군요. 저는 라이라 실버브룩입니다. 정보가 필요하다면 제가 도와드릴 수 있을 거예요. 물론... 적절한 보상이 있다면요.",
+        "choices": [
+          {
+            "id": "ask_about_info",
+            "text": "어떤 정보를 갖고 계신가요?",
+            "nextDialogueId": "lyra_info_types",
+            "reputation": 1
+          },
+          {
+            "id": "ask_about_herself",
+            "text": "실버타이드에서 어떤 일을 하시나요?",
+            "nextDialogueId": "lyra_about",
+            "reputation": 1
+          },
+          {
+            "id": "ask_for_market_info",
+            "text": "시장 정보가 필요합니다.",
+            "nextDialogueId": "lyra_market_info",
+            "conditions": [{ "type": "gold", "target": "player", "value": 100, "operator": "gte" }]
+          },
+          {
+            "id": "end_conversation",
+            "text": "지금은 정보가 필요하지 않습니다."
+          }
+        ]
+      },
+      {
+        "id": "lyra_info_types",
+        "text": "저는 다양한 정보를 취급합니다. 시장 동향, 무역로의 안전 정보, 특별한 거래 기회... 가격은 정보의 가치에 따라 다르지만, 좋은 관계를 유지한다면 특별 할인을 해드릴 수도 있죠.",
+        "choices": [
+          {
+            "id": "ask_market_trends",
+            "text": "시장 동향에 대해 더 알려주세요.",
+            "nextDialogueId": "lyra_market_trends",
+            "reputation": 1
+          },
+          {
+            "id": "ask_trade_routes",
+            "text": "안전한 무역로는 어디인가요?",
+            "nextDialogueId": "lyra_trade_routes",
+            "reputation": 1
+          },
+          {
+            "id": "back_to_greeting",
+            "text": "다른 주제로 돌아가겠습니다.",
+            "nextDialogueId": "lyra_greeting"
+          }
+        ]
+      }
+    ],
+    "trades": [
+      {
+        "id": "market_info",
+        "itemId": "market_intelligence",
+        "quality": "MEDIUM",
+        "quantityAvailable": 1,
+        "priceMultiplier": 1.0,
+        "reputationRequired": 0,
+        "restockDays": 1,
+        "maxQuantity": 1
+      }
+    ]
+  }
+}

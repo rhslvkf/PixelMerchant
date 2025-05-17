@@ -1,5 +1,6 @@
 import { Item, ItemCategory, Season } from "../models/index";
 
+// 아이템 키 상수
 export const ITEM_KEYS = {
   WHEAT: "wheat",
   COTTON: "cotton",
@@ -16,300 +17,63 @@ export const ITEM_KEYS = {
   SECRET_RECIPE: "secret_recipe",
 } as const;
 
-// 기본 상품 데이터
-export const ITEMS: Record<string, Item> = {
-  [ITEM_KEYS.WHEAT]: {
-    id: ITEM_KEYS.WHEAT,
-    name: "밀",
-    description: "기본적인 곡물로 빵과 다양한 음식의 재료가 됩니다.",
-    category: ItemCategory.AGRICULTURAL,
-    basePrice: 20,
-    weight: 1.0,
-    rarity: 1,
-    regionalFactors: {
-      berdan_empire: -0.2,
-      riona_union: 0.1,
-      kragmore_mountains: 0.3,
-      sahel_desert: 0.5,
-      azure_islands: 0.2,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0.1,
-      [Season.SUMMER]: -0.2,
-      [Season.FALL]: -0.3,
-      [Season.WINTER]: 0.2,
-    },
-  },
-  [ITEM_KEYS.COTTON]: {
-    id: ITEM_KEYS.COTTON,
-    name: "목화",
-    description: "부드럽고 가벼운 천을 만들기 위한 기본 재료입니다.",
-    category: ItemCategory.TEXTILE,
-    basePrice: 30,
-    weight: 0.7,
-    rarity: 1,
-    regionalFactors: {
-      berdan_empire: 0.1,
-      riona_union: -0.2,
-      kragmore_mountains: 0.4,
-      sahel_desert: -0.1,
-      azure_islands: 0.2,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: -0.1,
-      [Season.FALL]: 0.2,
-      [Season.WINTER]: 0.1,
-    },
-  },
-  [ITEM_KEYS.IRON_ORE]: {
-    id: ITEM_KEYS.IRON_ORE,
-    name: "철광석",
-    description: "무기와 도구를 만드는 핵심 재료입니다.",
-    category: ItemCategory.MINERAL,
-    basePrice: 50,
-    weight: 3.0,
-    rarity: 2,
-    regionalFactors: {
-      berdan_empire: 0.2,
-      riona_union: 0.3,
-      kragmore_mountains: -0.3,
-      sahel_desert: 0.4,
-      azure_islands: 0.3,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0,
-      [Season.WINTER]: 0.1,
-    },
-  },
-  [ITEM_KEYS.SILK]: {
-    id: ITEM_KEYS.SILK,
-    name: "비단",
-    description: "고급스럽고 부드러운 직물로, 귀족들이 선호합니다.",
-    category: ItemCategory.TEXTILE,
-    basePrice: 120,
-    weight: 0.5,
-    rarity: 3,
-    regionalFactors: {
-      berdan_empire: 0.3,
-      riona_union: -0.3,
-      kragmore_mountains: 0.2,
-      sahel_desert: 0.3,
-      azure_islands: 0.1,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0.2,
-      [Season.SUMMER]: -0.1,
-      [Season.FALL]: 0,
-      [Season.WINTER]: 0.1,
-    },
-  },
-  [ITEM_KEYS.SPICES]: {
-    id: ITEM_KEYS.SPICES,
-    name: "향신료",
-    description: "음식에 맛과 향을 더하는 희귀한 향신료입니다.",
-    category: ItemCategory.SPICE,
-    basePrice: 80,
-    weight: 0.3,
-    rarity: 3,
-    regionalFactors: {
-      berdan_empire: 0.4,
-      riona_union: 0.2,
-      kragmore_mountains: 0.3,
-      sahel_desert: -0.3,
-      azure_islands: 0.1,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0.1,
-      [Season.WINTER]: 0.2,
-    },
-  },
-  [ITEM_KEYS.WINE]: {
-    id: ITEM_KEYS.WINE,
-    name: "포도주",
-    description: "상류층이 즐기는 고급 음료입니다.",
-    category: ItemCategory.BEVERAGE,
-    basePrice: 70,
-    weight: 1.5,
-    rarity: 2,
-    regionalFactors: {
-      berdan_empire: -0.2,
-      riona_union: 0.3,
-      kragmore_mountains: 0.4,
-      sahel_desert: 0.2,
-      azure_islands: 0.1,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: -0.2,
-      [Season.WINTER]: 0.1,
-    },
-  },
-  [ITEM_KEYS.GEMSTONES]: {
-    id: ITEM_KEYS.GEMSTONES,
-    name: "보석",
-    description: "다양한 귀중한 보석들입니다. 장신구와 예술품에 사용됩니다.",
-    category: ItemCategory.JEWELRY,
-    basePrice: 300,
-    weight: 0.2,
-    rarity: 4,
-    regionalFactors: {
-      berdan_empire: 0.2,
-      riona_union: 0.3,
-      kragmore_mountains: -0.3,
-      sahel_desert: 0.4,
-      azure_islands: 0.3,
-    },
-    seasonalFactors: {
+// JSON 파일에서 아이템 데이터 로드
+import itemsData from "../assets/data/items.json";
+
+// TypeScript 타입에 맞게 아이템 데이터 변환
+const convertItemsData = (data: any): Record<string, Item> => {
+  const typedItems: Record<string, Item> = {};
+
+  Object.entries(data || {}).forEach(([key, item]: [string, any]) => {
+    if (!item) return;
+
+    // 카테고리 문자열을 ItemCategory enum으로 변환
+    const category =
+      item.category && ItemCategory[item.category as keyof typeof ItemCategory]
+        ? ItemCategory[item.category as keyof typeof ItemCategory]
+        : ItemCategory.PROVISION;
+
+    // 계절 요소 변환 (문자열 키를 Season enum으로 변환)
+    const seasonalFactors: Record<Season, number> = {
       [Season.SPRING]: 0,
       [Season.SUMMER]: 0,
       [Season.FALL]: 0,
       [Season.WINTER]: 0,
-    },
-  },
-  [ITEM_KEYS.LEATHER]: {
-    id: ITEM_KEYS.LEATHER,
-    name: "가죽",
-    description: "갑옷, 의류, 다양한 용품을 만드는 데 사용되는 재료입니다.",
-    category: ItemCategory.TEXTILE,
-    basePrice: 40,
-    weight: 1.0,
-    rarity: 1,
-    regionalFactors: {
-      berdan_empire: 0.1,
-      riona_union: 0,
-      kragmore_mountains: -0.1,
-      sahel_desert: 0.2,
-      azure_islands: 0.3,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0.1,
-      [Season.WINTER]: 0.2,
-    },
-  },
-  [ITEM_KEYS.POTTERY]: {
-    id: ITEM_KEYS.POTTERY,
-    name: "도자기",
-    description: "실용적이면서도 예술적인 가치가 있는 그릇과 용기입니다.",
-    category: ItemCategory.ART,
-    basePrice: 60,
-    weight: 2.0,
-    rarity: 2,
-    regionalFactors: {
-      berdan_empire: 0.1,
-      riona_union: -0.1,
-      kragmore_mountains: 0.2,
-      sahel_desert: 0.3,
-      azure_islands: -0.2,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0,
-      [Season.WINTER]: 0,
-    },
-  },
-  [ITEM_KEYS.HERBS]: {
-    id: ITEM_KEYS.HERBS,
-    name: "약초",
-    description: "약과 연고를 만드는 데 사용되는 다양한 약초입니다.",
-    category: ItemCategory.MEDICINE,
-    basePrice: 45,
-    weight: 0.3,
-    rarity: 2,
-    regionalFactors: {
-      berdan_empire: 0.2,
-      riona_union: -0.2,
-      kragmore_mountains: 0.1,
-      sahel_desert: 0.3,
-      azure_islands: -0.1,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: -0.2,
-      [Season.SUMMER]: -0.1,
-      [Season.FALL]: 0.2,
-      [Season.WINTER]: 0.3,
-    },
-  },
-  information: {
-    id: "information",
-    name: "정보",
-    description: "귀중한 정보는 때로 금보다 값지다.",
-    category: ItemCategory.INFORMATION,
-    basePrice: 100,
-    weight: 0,
-    rarity: 3,
-    regionalFactors: {
-      berdan_empire: 0,
-      riona_union: 0,
-      kragmore_mountains: 0,
-      sahel_desert: 0,
-      azure_islands: 0,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0,
-      [Season.WINTER]: 0,
-    },
-  },
-  map: {
-    id: "map",
-    name: "지도",
-    description: "새로운 경로와 미지의 장소를 보여주는 지도.",
-    category: ItemCategory.MAP,
-    basePrice: 150,
-    weight: 0.5,
-    rarity: 4,
-    regionalFactors: {
-      berdan_empire: 0,
-      riona_union: 0,
-      kragmore_mountains: 0,
-      sahel_desert: 0,
-      azure_islands: 0,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0,
-      [Season.WINTER]: 0,
-    },
-  },
-  secret_recipe: {
-    id: "secret_recipe",
-    name: "비밀 제조법",
-    description: "특별한 아이템을 제작하는 비밀 제조법.",
-    category: ItemCategory.INFORMATION,
-    basePrice: 300,
-    weight: 0.5,
-    rarity: 5,
-    regionalFactors: {
-      berdan_empire: 0,
-      riona_union: 0,
-      kragmore_mountains: 0,
-      sahel_desert: 0,
-      azure_islands: 0,
-    },
-    seasonalFactors: {
-      [Season.SPRING]: 0,
-      [Season.SUMMER]: 0,
-      [Season.FALL]: 0,
-      [Season.WINTER]: 0,
-    },
-  },
+    };
+
+    if (item.seasonalFactors) {
+      Object.entries(item.seasonalFactors).forEach(([season, factor]: [string, any]) => {
+        if (typeof factor === "number" && season in Season) {
+          seasonalFactors[Season[season as keyof typeof Season]] = factor;
+        }
+      });
+    }
+
+    typedItems[key] = {
+      id: item.id || key,
+      name: item.name || key,
+      description: item.description || "",
+      category,
+      basePrice: item.basePrice || 10,
+      weight: item.weight || 1,
+      rarity: item.rarity || 1,
+      regionalFactors: item.regionalFactors || {},
+      seasonalFactors,
+    } as Item;
+  });
+
+  return typedItems;
 };
 
+// 변환된 아이템 데이터
+export const ITEMS: Record<string, Item> = convertItemsData(itemsData);
+
+// 모든 아이템 목록 가져오기
 export function getAllItems(): Item[] {
   return Object.values(ITEMS);
 }
 
+// 아이템 ID로 아이템 찾기
 export function getItemById(id: string): Item | undefined {
   return ITEMS[id];
 }

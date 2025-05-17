@@ -1,0 +1,194 @@
+{
+  "golden_harbor": {
+    "id": "golden_harbor",
+    "name": "황금항",
+    "regionId": "berdan_empire",
+    "description": "베르단 제국의 주요 무역항입니다. 황금빛 항구와 웅장한 상선들이 특징입니다.",
+    "size": 4,
+    "wealthLevel": 5,
+    "specialties": ["silk", "wine"],
+    "travelConnections": [
+      {
+        "destinationId": "royal_market",
+        "distance": 4,
+        "dangerLevel": 1,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "silver_tide",
+        "distance": 6,
+        "dangerLevel": 3,
+        "transportOptions": ["SHIP"]
+      }
+    ],
+    "backgroundImage": "golden_harbor_bg"
+  },
+  "royal_market": {
+    "id": "royal_market",
+    "name": "로열마켓",
+    "regionId": "berdan_empire",
+    "description": "제국 수도의 중심지로, 사치품과 예술품이 거래됩니다.",
+    "size": 5,
+    "wealthLevel": 5,
+    "specialties": ["gemstones", "pottery"],
+    "travelConnections": [
+      {
+        "destinationId": "golden_harbor",
+        "distance": 4,
+        "dangerLevel": 1,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "iron_peak",
+        "distance": 7,
+        "dangerLevel": 2,
+        "transportOptions": ["FOOT", "CART"]
+      }
+    ],
+    "backgroundImage": "royal_market_bg"
+  },
+  "silver_tide": {
+    "id": "silver_tide",
+    "name": "실버타이드",
+    "regionId": "riona_union",
+    "description": "은광으로 유명한 항구 도시입니다. 상인들의 천국이라 불립니다.",
+    "size": 3,
+    "wealthLevel": 4,
+    "specialties": ["iron_ore", "cotton"],
+    "travelConnections": [
+      {
+        "destinationId": "golden_harbor",
+        "distance": 6,
+        "dangerLevel": 3,
+        "transportOptions": ["SHIP"]
+      },
+      {
+        "destinationId": "mistwood",
+        "distance": 3,
+        "dangerLevel": 2,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "iron_peak",
+        "distance": 5,
+        "dangerLevel": 2,
+        "transportOptions": ["FOOT", "CART"]
+      }
+    ],
+    "backgroundImage": "silver_tide_bg"
+  },
+  "mistwood": {
+    "id": "mistwood",
+    "name": "미스트우드",
+    "regionId": "riona_union",
+    "description": "안개가 자욱한 숲 속의 도시로, 희귀한 약초와 목재가 특산품입니다.",
+    "size": 2,
+    "wealthLevel": 3,
+    "specialties": ["herbs", "leather"],
+    "travelConnections": [
+      {
+        "destinationId": "silver_tide",
+        "distance": 3,
+        "dangerLevel": 2,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "stone_gate",
+        "distance": 4,
+        "dangerLevel": 3,
+        "transportOptions": ["FOOT", "CART"]
+      }
+    ],
+    "backgroundImage": "mistwood_bg"
+  },
+  "iron_peak": {
+    "id": "iron_peak",
+    "name": "아이언피크",
+    "regionId": "kragmore_mountains",
+    "description": "산맥 깊은 곳의 광산 도시로, 고품질 금속과 보석이 생산됩니다.",
+    "size": 3,
+    "wealthLevel": 3,
+    "specialties": ["iron_ore", "gemstones"],
+    "travelConnections": [
+      {
+        "destinationId": "royal_market",
+        "distance": 7,
+        "dangerLevel": 2,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "silver_tide",
+        "distance": 5,
+        "dangerLevel": 2,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "stone_gate",
+        "distance": 4,
+        "dangerLevel": 3,
+        "transportOptions": ["FOOT", "CART"]
+      }
+    ],
+    "backgroundImage": "iron_peak_bg"
+  },
+  "stone_gate": {
+    "id": "stone_gate",
+    "name": "스톤게이트",
+    "regionId": "kragmore_mountains",
+    "description": "산맥을 지키는 요새 도시로, 뛰어난 무기와 방어구가 생산됩니다.",
+    "size": 2,
+    "wealthLevel": 2,
+    "specialties": ["iron_ore", "leather"],
+    "travelConnections": [
+      {
+        "destinationId": "iron_peak",
+        "distance": 4,
+        "dangerLevel": 3,
+        "transportOptions": ["FOOT", "CART"]
+      },
+      {
+        "destinationId": "mistwood",
+        "distance": 4,
+        "dangerLevel": 3,
+        "transportOptions": ["FOOT", "CART"]
+      }
+    ],
+    "backgroundImage": "stone_gate_bg"
+  },
+  "amber_oasis": {
+    "id": "amber_oasis",
+    "name": "앰버 오아시스",
+    "regionId": "sahel_desert",
+    "description": "사막 한가운데의 오아시스 도시로, 향신료와 약재가 특산품입니다.",
+    "size": 3,
+    "wealthLevel": 4,
+    "specialties": ["herbs", "spices"],
+    "travelConnections": [
+      {
+        "destinationId": "stone_gate",
+        "distance": 9,
+        "dangerLevel": 4,
+        "transportOptions": ["FOOT", "CART"]
+      }
+    ],
+    "backgroundImage": "amber_oasis_bg"
+  },
+  "pearl_harbor": {
+    "id": "pearl_harbor",
+    "name": "진주항",
+    "regionId": "azure_islands",
+    "description": "아주르 제도 최대의 무역항으로, 진주와 이국적인 식재료가 거래됩니다.",
+    "size": 4,
+    "wealthLevel": 5,
+    "specialties": ["spices", "gemstones"],
+    "travelConnections": [
+      {
+        "destinationId": "golden_harbor",
+        "distance": 10,
+        "dangerLevel": 4,
+        "transportOptions": ["SHIP"]
+      }
+    ],
+    "backgroundImage": "pearl_harbor_bg"
+  }
+}

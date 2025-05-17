@@ -1,49 +1,9 @@
 import { City, Market, MarketItem, Region, Season, TransportType } from "../models/index";
 import { ITEMS, ITEM_KEYS } from "./items";
 
-// 지역 데이터
-export const REGIONS: Record<string, Region> = {
-  berdan_empire: {
-    id: "berdan_empire",
-    name: "베르단 제국",
-    description: "중앙 대륙의 강력한 제국, 법과 질서 중시",
-    culture: "berdan",
-    climate: "temperate",
-    dangerLevel: 1,
-  },
-  riona_union: {
-    id: "riona_union",
-    name: "리오나 연합",
-    description: "동부 자유 도시들의 느슨한 연합",
-    culture: "riona",
-    climate: "temperate_coastal",
-    dangerLevel: 2,
-  },
-  kragmore_mountains: {
-    id: "kragmore_mountains",
-    name: "크라그모어 산맥",
-    description: "북부의 거친 산악 지대",
-    culture: "kragmore",
-    climate: "mountainous",
-    dangerLevel: 3,
-  },
-  sahel_desert: {
-    id: "sahel_desert",
-    name: "사헬 사막",
-    description: "남부의 광활한 사막 지역",
-    culture: "sahel",
-    climate: "desert",
-    dangerLevel: 4,
-  },
-  azure_islands: {
-    id: "azure_islands",
-    name: "아주르 제도",
-    description: "서쪽 바다의 섬 군락",
-    culture: "azure",
-    climate: "tropical",
-    dangerLevel: 3,
-  },
-};
+// JSON에서 데이터 로드
+import regionsData from "../assets/data/regions.json";
+import citiesData from "../assets/data/cities.json";
 
 // 초기 날짜 생성 헬퍼 함수
 const createInitialDate = () => ({
@@ -55,11 +15,16 @@ const createInitialDate = () => ({
 
 // 초기 시장 생성 함수
 const createInitialMarket = (cityId: string, specialties: string[] = []): Market => {
+  // specialties 배열이 없는 경우 빈 배열로 처리
+  const safeSpecialties = Array.isArray(specialties) ? specialties : [];
+
   // 도시에서 거래되는 아이템 선택 (기본 + 특산품)
   const cityItems = Object.values(ITEMS)
-    .filter((item) => item.rarity <= 3) // 초기에는 희귀도 3 이하만 취급
+    .filter((item) => item && item.rarity && item.rarity <= 3) // 초기에는 희귀도 3 이하만 취급
     .map((item) => {
-      const isSpecialty = specialties.includes(item.id);
+      if (!item || !item.id) return null;
+
+      const isSpecialty = safeSpecialties.includes(item.id);
       const baseQuantity = isSpecialty ? 30 : 10;
 
       // 품질별 재고 계산
@@ -69,258 +34,119 @@ const createInitialMarket = (cityId: string, specialties: string[] = []): Market
 
       return {
         itemId: item.id,
-        basePrice: item.basePrice,
-        currentPrice: item.basePrice, // 초기에는 기본가
+        basePrice: item.basePrice || 10, // 기본 가격이 없으면 10으로 설정
+        currentPrice: item.basePrice || 10, // 초기에는 기본가
         qualityStock: {
           low: lowStock,
           medium: mediumStock,
           high: highStock,
         },
-        qualityRange: isSpecialty ? [0.9, 1.3] : [0.8, 1.1], // 특산품은 품질 좋음
+        qualityRange: isSpecialty ? ([0.9, 1.3] as [number, number]) : ([0.8, 1.1] as [number, number]), // 특산품은 품질 좋음
         priceHistory: [], // 초기에는 가격 이력 없음
       };
-    });
+    })
+    .filter(Boolean) as MarketItem[]; // null 항목 제거 및 타입 지정
 
   return {
-    items: cityItems as unknown as MarketItem[],
+    items: cityItems,
     lastUpdated: createInitialDate(),
     demandFactors: {}, // 초기에는 수요 계수 없음
     volatility: 0.2 + Math.random() * 0.3, // 0.2-0.5 사이 변동성
   };
 };
 
-// 도시 데이터
-export const CITIES: Record<string, City> = {
-  golden_harbor: {
-    id: "golden_harbor",
-    name: "황금항",
-    regionId: "berdan_empire",
-    description: "베르단 제국의 주요 무역항입니다. 황금빛 항구와 웅장한 상선들이 특징입니다.",
-    size: 4,
-    wealthLevel: 5,
-    specialties: [ITEM_KEYS.SILK, ITEM_KEYS.WINE],
-    market: createInitialMarket("golden_harbor", [ITEM_KEYS.SILK, ITEM_KEYS.WINE]),
-    travelConnections: [
-      {
-        destinationId: "royal_market",
-        distance: 4,
-        dangerLevel: 1,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "silver_tide",
-        distance: 6,
-        dangerLevel: 3,
-        transportOptions: [TransportType.SHIP],
-      },
-    ],
-    backgroundImage: "golden_harbor_bg",
-  },
-  royal_market: {
-    id: "royal_market",
-    name: "로열마켓",
-    regionId: "berdan_empire",
-    description: "제국 수도의 중심지로, 사치품과 예술품이 거래됩니다.",
-    size: 5,
-    wealthLevel: 5,
-    specialties: [ITEM_KEYS.GEMSTONES, ITEM_KEYS.POTTERY],
-    market: createInitialMarket("royal_market", [ITEM_KEYS.GEMSTONES, ITEM_KEYS.POTTERY]),
-    travelConnections: [
-      {
-        destinationId: "golden_harbor",
-        distance: 4,
-        dangerLevel: 1,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "iron_peak",
-        distance: 7,
-        dangerLevel: 2,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "royal_market_bg",
-  },
-  silver_tide: {
-    id: "silver_tide",
-    name: "실버타이드",
-    regionId: "riona_union",
-    description: "은광으로 유명한 항구 도시입니다. 상인들의 천국이라 불립니다.",
-    size: 3,
-    wealthLevel: 4,
-    specialties: [ITEM_KEYS.IRON_ORE, ITEM_KEYS.COTTON],
-    market: createInitialMarket("silver_tide", [ITEM_KEYS.IRON_ORE, ITEM_KEYS.COTTON]),
-    travelConnections: [
-      {
-        destinationId: "golden_harbor",
-        distance: 6,
-        dangerLevel: 3,
-        transportOptions: [TransportType.SHIP],
-      },
-      {
-        destinationId: "mistwood",
-        distance: 3,
-        dangerLevel: 2,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "iron_peak",
-        distance: 5,
-        dangerLevel: 2,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "silver_tide_bg",
-  },
-  mistwood: {
-    id: "mistwood",
-    name: "미스트우드",
-    regionId: "riona_union",
-    description: "안개가 자욱한 숲 속의 도시로, 희귀한 약초와 목재가 특산품입니다.",
-    size: 2,
-    wealthLevel: 3,
-    specialties: [ITEM_KEYS.HERBS, ITEM_KEYS.LEATHER],
-    market: createInitialMarket("mistwood", [ITEM_KEYS.HERBS, ITEM_KEYS.LEATHER]),
-    travelConnections: [
-      {
-        destinationId: "silver_tide",
-        distance: 3,
-        dangerLevel: 2,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "stone_gate",
-        distance: 4,
-        dangerLevel: 3,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "mistwood_bg",
-  },
-  iron_peak: {
-    id: "iron_peak",
-    name: "아이언피크",
-    regionId: "kragmore_mountains",
-    description: "산맥 깊은 곳의 광산 도시로, 고품질 금속과 보석이 생산됩니다.",
-    size: 3,
-    wealthLevel: 3,
-    specialties: [ITEM_KEYS.IRON_ORE, ITEM_KEYS.GEMSTONES],
-    market: createInitialMarket("iron_peak", [ITEM_KEYS.IRON_ORE, ITEM_KEYS.GEMSTONES]),
-    travelConnections: [
-      {
-        destinationId: "royal_market",
-        distance: 7,
-        dangerLevel: 2,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "silver_tide",
-        distance: 5,
-        dangerLevel: 2,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "stone_gate",
-        distance: 4,
-        dangerLevel: 3,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "iron_peak_bg",
-  },
-  stone_gate: {
-    id: "stone_gate",
-    name: "스톤게이트",
-    regionId: "kragmore_mountains",
-    description: "산맥을 지키는 요새 도시로, 뛰어난 무기와 방어구가 생산됩니다.",
-    size: 2,
-    wealthLevel: 2,
-    specialties: [ITEM_KEYS.IRON_ORE, ITEM_KEYS.LEATHER],
-    market: createInitialMarket("stone_gate", [ITEM_KEYS.IRON_ORE, ITEM_KEYS.LEATHER]),
-    travelConnections: [
-      {
-        destinationId: "iron_peak",
-        distance: 4,
-        dangerLevel: 3,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "mistwood",
-        distance: 4,
-        dangerLevel: 3,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "sunset_oasis",
-        distance: 8,
-        dangerLevel: 4,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "stone_gate_bg",
-  },
-  sunset_oasis: {
-    id: "sunset_oasis",
-    name: "선셋오아시스",
-    regionId: "sahel_desert",
-    description: "사막 중앙의 오아시스 도시로, 희귀한 향신료와 염료가 거래됩니다.",
-    size: 3,
-    wealthLevel: 4,
-    specialties: [ITEM_KEYS.SPICES, ITEM_KEYS.HERBS],
-    market: createInitialMarket("sunset_oasis", [ITEM_KEYS.SPICES, ITEM_KEYS.HERBS]),
-    travelConnections: [
-      {
-        destinationId: "stone_gate",
-        distance: 8,
-        dangerLevel: 4,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-      {
-        destinationId: "red_dune",
-        distance: 5,
-        dangerLevel: 5,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "sunset_oasis_bg",
-  },
-  red_dune: {
-    id: "red_dune",
-    name: "레드듄",
-    regionId: "sahel_desert",
-    description: "사막 깊숙한 곳의 비밀 도시로, 신비한 아이템과 지식이 숨겨져 있습니다.",
-    size: 2,
-    wealthLevel: 3,
-    specialties: [ITEM_KEYS.SPICES, ITEM_KEYS.GEMSTONES],
-    market: createInitialMarket("red_dune", [ITEM_KEYS.SPICES, ITEM_KEYS.GEMSTONES]),
-    travelConnections: [
-      {
-        destinationId: "sunset_oasis",
-        distance: 5,
-        dangerLevel: 5,
-        transportOptions: [TransportType.FOOT, TransportType.CART],
-      },
-    ],
-    backgroundImage: "red_dune_bg",
-  },
+// TypeScript 타입에 맞게 지역 데이터 변환
+const convertRegionsData = (data: any): Record<string, Region> => {
+  const typedRegions: Record<string, Region> = {};
+
+  Object.entries(data || {}).forEach(([key, region]: [string, any]) => {
+    if (region) {
+      typedRegions[key] = region as Region;
+    }
+  });
+
+  return typedRegions;
 };
 
-// 전체 도시 목록 반환
+// TypeScript 타입에 맞게 도시 데이터 변환
+const convertCitiesData = (data: any): Record<string, City> => {
+  const typedCities: Record<string, City> = {};
+
+  Object.entries(data || {}).forEach(([key, city]: [string, any]) => {
+    if (!city) return;
+
+    // 문자열 배열을 ItemKey 배열로 변환
+    const specialties = Array.isArray(city.specialties)
+      ? city.specialties
+          .map((specialty: string) => {
+            if (typeof specialty !== "string") return "";
+            const itemKey = specialty.toUpperCase();
+            return itemKey in ITEM_KEYS ? ITEM_KEYS[itemKey as keyof typeof ITEM_KEYS] : specialty;
+          })
+          .filter(Boolean)
+      : [];
+
+    // transportOptions 문자열을 TransportType enum으로 변환
+    const travelConnections = Array.isArray(city.travelConnections)
+      ? city.travelConnections
+          .map((conn: any) => {
+            if (!conn) return null;
+            return {
+              ...conn,
+              transportOptions: Array.isArray(conn.transportOptions)
+                ? conn.transportOptions.map((type: string) => {
+                    if (typeof type !== "string") return TransportType.FOOT;
+                    return TransportType[type as keyof typeof TransportType] || TransportType.FOOT;
+                  })
+                : [TransportType.FOOT], // 기본값 설정
+            };
+          })
+          .filter(Boolean)
+      : [];
+
+    // 시장 데이터 생성 - specialties를 문자열 배열로 변환
+    const market = createInitialMarket(city.id || key, Array.isArray(city.specialties) ? city.specialties : []);
+
+    typedCities[key] = {
+      id: city.id || key,
+      name: city.name || key,
+      regionId: city.regionId || "berdan_empire",
+      description: city.description || "",
+      size: city.size || 1,
+      wealthLevel: city.wealthLevel || 1,
+      backgroundImage: city.backgroundImage || "default_bg",
+      ...city,
+      specialties,
+      travelConnections,
+      market,
+    } as City;
+  });
+
+  return typedCities;
+};
+
+// 변환된 지역 데이터
+export const REGIONS: Record<string, Region> = convertRegionsData(regionsData);
+
+// 변환된 도시 데이터
+export const CITIES: Record<string, City> = convertCitiesData(citiesData);
+
+// 모든 도시 목록 가져오기
 export function getAllCities(): City[] {
   return Object.values(CITIES);
 }
 
-// 특정 도시 반환
+// 도시 ID로 도시 찾기
 export function getCityById(id: string): City | undefined {
   return CITIES[id];
 }
 
-// 전체 지역 목록 반환
+// 모든 지역 목록 가져오기
 export function getAllRegions(): Region[] {
   return Object.values(REGIONS);
 }
 
-// 특정 지역 반환
+// 지역 ID로 지역 찾기
 export function getRegionById(id: string): Region | undefined {
   return REGIONS[id];
 }

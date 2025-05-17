@@ -1,0 +1,42 @@
+{
+  "berdan_empire": {
+    "id": "berdan_empire",
+    "name": "베르단 제국",
+    "description": "중앙 대륙의 강력한 제국, 법과 질서 중시",
+    "culture": "berdan",
+    "climate": "temperate",
+    "dangerLevel": 1
+  },
+  "riona_union": {
+    "id": "riona_union",
+    "name": "리오나 연합",
+    "description": "동부 자유 도시들의 느슨한 연합",
+    "culture": "riona",
+    "climate": "temperate_coastal",
+    "dangerLevel": 2
+  },
+  "kragmore_mountains": {
+    "id": "kragmore_mountains",
+    "name": "크라그모어 산맥",
+    "description": "북부의 거친 산악 지대",
+    "culture": "kragmore",
+    "climate": "mountainous",
+    "dangerLevel": 3
+  },
+  "sahel_desert": {
+    "id": "sahel_desert",
+    "name": "사헬 사막",
+    "description": "남부의 광활한 사막 지역",
+    "culture": "sahel",
+    "climate": "desert",
+    "dangerLevel": 4
+  },
+  "azure_islands": {
+    "id": "azure_islands",
+    "name": "아주르 제도",
+    "description": "서쪽 바다의 섬 군락",
+    "culture": "azure",
+    "climate": "tropical",
+    "dangerLevel": 3
+  }
+}
