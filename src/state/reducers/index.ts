@@ -18,6 +18,9 @@ import {
   updateFactionReputationReducer,
   updateGoldReducer,
 } from "./playerReducers";
+import { acceptQuestReducer } from "./questReducers";
+import { abandonQuestReducer, completeQuestReducer } from "./questReducers";
+import { checkQuestsReducer } from "./questReducers";
 import {
   completeTravelReducer,
   processTravelEventReducer,
@@ -82,6 +85,10 @@ const reducerMap: Record<GameAction["type"], (state: GameState, action: any) => 
   TRADE_WITH_NPC: (state, action) =>
     tradeWithNPCReducer(state, action.payload.npcId, action.payload.tradeId, action.payload.quantity),
   RESTOCK_NPC_TRADES: (state, action) => restockNPCTradesReducer(state, action.payload.currentDate),
+  ACCEPT_QUEST: (state, action) => acceptQuestReducer(state, action.payload.questId),
+  ABANDON_QUEST: (state, action) => abandonQuestReducer(state, action.payload.questId),
+  COMPLETE_QUEST: (state, action) => completeQuestReducer(state, action.payload.questId),
+  CHECK_QUESTS: (state) => checkQuestsReducer(state),
 };
 
 /**

@@ -13,6 +13,7 @@ import TravelScreen from "../screens/TravelScreen";
 import InventoryScreen from "../screens/InventoryScreen";
 import CharacterScreen from "../screens/CharacterScreen";
 import EventScreen from "../screens/EventScreen";
+import QuestScreen from "../screens/QuestScreen";
 
 const Stack = createStackNavigator();
 
@@ -29,6 +30,7 @@ const AppNavigator = () => {
         <Stack.Screen name={SCREENS.INVENTORY} component={InventoryScreen} />
         <Stack.Screen name={SCREENS.CHARACTER} component={CharacterScreen} />
         <Stack.Screen name={SCREENS.EVENT} component={EventScreen} />
+        <Stack.Screen name={SCREENS.QUEST} component={QuestScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

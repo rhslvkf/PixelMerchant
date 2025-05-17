@@ -34,6 +34,7 @@ export const initialPlayer: Player = {
     travelDistance: 0,
     successfulDeals: 0,
   },
+  quests: [],
 };
 
 // NPC 초기 상태 정의

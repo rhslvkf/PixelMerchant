@@ -14,3 +14,6 @@ export * from "./events";
 
 // NPC 관련 타입 내보내기
 export * from "./npc";
+
+// 퀘스트 관련 타입 내보내기
+export * from "./quests";

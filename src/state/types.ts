@@ -45,7 +45,11 @@ export type GameAction =
   | { type: "SELECT_DIALOGUE_CHOICE"; payload: { choiceId: string } }
   | { type: "END_NPC_INTERACTION" }
   | { type: "TRADE_WITH_NPC"; payload: { npcId: string; tradeId: string; quantity: number } }
-  | { type: "RESTOCK_NPC_TRADES"; payload: { currentDate: GameDate } };
+  | { type: "RESTOCK_NPC_TRADES"; payload: { currentDate: GameDate } }
+  | { type: "ACCEPT_QUEST"; payload: { questId: string } }
+  | { type: "ABANDON_QUEST"; payload: { questId: string } }
+  | { type: "COMPLETE_QUEST"; payload: { questId: string } }
+  | { type: "CHECK_QUESTS" };
 
 // Context 타입 정의
 export interface GameContextType {

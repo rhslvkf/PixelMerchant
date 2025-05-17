@@ -1,5 +1,4 @@
-import { Season } from "./world";
-import { ItemQuality } from "./economy";
+import { PlayerQuest } from "./quests";
 
 // 플레이어 모델
 export interface Player {
@@ -12,6 +11,7 @@ export interface Player {
   skillExperience: Record<SkillType, number>;
   reputation: Record<string, number>;
   stats: PlayerStats;
+  quests: PlayerQuest[];
 }
 
 export interface InventoryItem {

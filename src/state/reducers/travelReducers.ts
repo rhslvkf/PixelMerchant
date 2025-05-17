@@ -3,6 +3,7 @@ import { advanceDate } from "../../logic/DateSystem";
 import { applyEventEffects, selectEventOutcome } from "../../logic/EventSystem";
 import { calculateArrivalDate, createTravelRoute, generateTravelEvents } from "../../logic/TravelSystem";
 import { GameDate, GameState, TransportType } from "../../models/index";
+import { checkQuestsReducer } from "./questReducers";
 
 /**
  * 도시 이동 리듀서
@@ -31,7 +32,9 @@ export function travelToCityReducer(state: GameState, cityId: string, travelDays
     },
   };
 
-  return restockNPCTradesReducer(updatedState, newDate);
+  const questsUpdated = checkQuestsReducer(updatedState);
+
+  return restockNPCTradesReducer(questsUpdated, newDate);
 }
 
 /**

@@ -24,4 +24,5 @@ export enum SCREENS {
   EVENT = "Event",
   SETTINGS = "Settings",
   NPC_INTERACTION = "NPCInteraction",
+  QUEST = "Quest",
 }

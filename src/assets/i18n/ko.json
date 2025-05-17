@@ -12,6 +12,13 @@
     "ship": "배",
     "special": "특수 운송"
   },
+  "skills": {
+    "trade": "거래",
+    "logistics": "물류",
+    "insight": "통찰",
+    "diplomacy": "외교",
+    "exploration": "탐험"
+  },
   "common": {
     "loading": "로딩 중...",
     "error": "오류가 발생했습니다",

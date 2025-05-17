@@ -1,4 +1,13 @@
-import { GameState, NPC, DialogueEffect, NPCInteractionHistory, GameDate, SkillType, ItemQuality } from "../../models";
+import {
+  GameState,
+  NPC,
+  DialogueEffect,
+  NPCInteractionHistory,
+  GameDate,
+  SkillType,
+  ItemQuality,
+  QUALITY_FACTORS,
+} from "../../models";
 
 /**
  * NPC 상호작용 시작 리듀서
@@ -178,7 +187,7 @@ function applyDialogueEffects(state: GameState, effects: DialogueEffect[], npcId
               itemId,
               quantity,
               purchasePrice: 0, // 대화로 얻은 아이템은 구매가 0
-              quality: ItemQuality.MEDIUM, // 기본 품질
+              quality: QUALITY_FACTORS[ItemQuality.MEDIUM], // 기본 품질
             });
           }
 
@@ -346,7 +355,9 @@ export function tradeWithNPCReducer(state: GameState, npcId: string, tradeId: st
   // 아이템 추가와 골드 차감은 별도 리듀서 활용
   // 이 예시에서는 간소화
   const updatedInventory = [...state.player.inventory];
-  const existingItem = updatedInventory.find((i) => i.itemId === trade.itemId && i.quality === trade.quality);
+  const existingItem = updatedInventory.find(
+    (i) => i.itemId === trade.itemId && i.quality === QUALITY_FACTORS[trade.quality]
+  );
 
   if (existingItem) {
     existingItem.quantity += quantity;
@@ -355,7 +366,7 @@ export function tradeWithNPCReducer(state: GameState, npcId: string, tradeId: st
       itemId: trade.itemId,
       quantity,
       purchasePrice: basePrice * trade.priceMultiplier,
-      quality: trade.quality,
+      quality: QUALITY_FACTORS[trade.quality],
     });
   }
 

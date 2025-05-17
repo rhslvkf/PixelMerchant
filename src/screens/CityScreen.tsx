@@ -87,15 +87,16 @@ const SpecialtiesList = React.memo(({ specialties }: SpecialtiesListProps) => (
 // 장소 목록 컴포넌트
 interface PlacesGridProps {
   onMarketPress: () => void;
+  onQuestPress: () => void;
 }
 
-const PlacesGrid = React.memo(({ onMarketPress }: PlacesGridProps) => (
+const PlacesGrid = React.memo(({ onMarketPress, onQuestPress }: PlacesGridProps) => (
   <View style={styles.placesContainer}>
     <PixelText style={styles.sectionTitle}>이용 가능 장소</PixelText>
     <View style={styles.placesGrid}>
       <PlaceButton name="시장" onPress={onMarketPress} />
+      <PlaceButton name="길드" onPress={onQuestPress} />
       <PlaceButton name="여관" />
-      <PlaceButton name="길드" />
     </View>
   </View>
 ));
@@ -142,6 +143,7 @@ const CityScreen = () => {
   // 이벤트 핸들러들
   const toggleTravelModal = () => setShowTravelModal(!showTravelModal);
   const goToMarket = () => navigation.navigate("Market");
+  const goToQuest = () => navigation.navigate("Quest");
   const goToInventory = () => navigation.navigate("Inventory");
   const goToCharacter = () => navigation.navigate("Character");
 
@@ -198,7 +200,7 @@ const CityScreen = () => {
             <NPCList npcs={npcsInCurrentCity} onSelectNPC={handleSelectNPC} />
           </View>
 
-          <PlacesGrid onMarketPress={goToMarket} />
+          <PlacesGrid onMarketPress={goToMarket} onQuestPress={goToQuest} />
         </ScrollView>
 
         {/* 푸터 섹션 */}

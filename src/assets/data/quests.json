@@ -1,0 +1,110 @@
+{
+  "first_trade": {
+    "id": "first_trade",
+    "title": "첫 거래 계약",
+    "description": "베르단 제국은 항상 가치 있는 거래 파트너를 찾고 있습니다. 황금항 시장에서 면직물 10개를 구매하여 귀하의 거래 능력을 증명하세요.",
+    "type": "trade",
+    "giver": "marcus_gold",
+    "giverCityId": "golden_harbor",
+    "difficulty": "easy",
+    "objectives": [
+      {
+        "type": "buy",
+        "target": "cotton",
+        "amount": 10,
+        "completed": false
+      }
+    ],
+    "rewards": {
+      "gold": 150,
+      "reputation": [{ "factionId": "berdan_empire", "amount": 10 }],
+      "skillExp": [{ "skill": "trade", "amount": 50 }]
+    }
+  },
+
+  "royal_delivery": {
+    "id": "royal_delivery",
+    "title": "왕실 배달",
+    "description": "로열마켓의 상인 길드는 황금항에서 고급 비단을 구매하여 로열마켓으로 배달해 줄 상인을 찾고 있습니다.",
+    "type": "delivery",
+    "giver": "lyra_silverbrook",
+    "giverCityId": "royal_market",
+    "difficulty": "medium",
+    "objectives": [
+      {
+        "type": "buy",
+        "target": "silk",
+        "amount": 5,
+        "quality": "high",
+        "completed": false
+      },
+      {
+        "type": "visit",
+        "target": "royal_market",
+        "completed": false
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "reputation": [{ "factionId": "berdan_empire", "amount": 15 }],
+      "items": [{ "itemId": "market_intelligence", "quantity": 1 }],
+      "skillExp": [
+        { "skill": "trade", "amount": 75 },
+        { "skill": "logistics", "amount": 50 }
+      ]
+    },
+    "requirements": {
+      "completedQuests": ["first_trade"]
+    }
+  },
+
+  "diplomatic_mission": {
+    "id": "diplomatic_mission",
+    "title": "외교 사절",
+    "description": "크라그모어 산악민들과 베르단 제국 간의 관계가 악화되고 있습니다. 아이언피크를 방문하여 현지 지도자들에게 선물을 전달하세요.",
+    "type": "diplomacy",
+    "giver": "marcus_gold",
+    "giverCityId": "golden_harbor",
+    "difficulty": "hard",
+    "objectives": [
+      {
+        "type": "buy",
+        "target": "wine",
+        "amount": 3,
+        "quality": "high",
+        "completed": false
+      },
+      {
+        "type": "buy",
+        "target": "gemstones",
+        "amount": 2,
+        "completed": false
+      },
+      {
+        "type": "visit",
+        "target": "iron_peak",
+        "completed": false
+      },
+      {
+        "type": "reputation",
+        "target": "kragmore_mountains",
+        "level": 1,
+        "completed": false
+      }
+    ],
+    "rewards": {
+      "gold": 500,
+      "reputation": [
+        { "factionId": "berdan_empire", "amount": 20 },
+        { "factionId": "kragmore_mountains", "amount": 30 }
+      ],
+      "skillExp": [{ "skill": "diplomacy", "amount": 100 }],
+      "unlocks": ["iron_peak_trade_route"]
+    },
+    "requirements": {
+      "minReputation": [{ "factionId": "berdan_empire", "level": 1 }],
+      "skills": [{ "skill": "diplomacy", "level": 2 }]
+    },
+    "timeLimit": 30
+  }
+}
