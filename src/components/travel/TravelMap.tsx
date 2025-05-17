@@ -13,14 +13,14 @@ interface TravelMapProps {
 const TravelMap: React.FC<TravelMapProps> = ({ fromCity, toCity, progress }) => {
   // SVG 맵 크기
   const width = 300;
-  const height = 200;
+  const height = 150;
 
   // 도시 위치 설정 (실제로는 좌표 계산 로직이 필요)
   // 간단한 예시로 출발 도시는 왼쪽, 도착 도시는 오른쪽에 배치
   const startX = 50;
-  const startY = 100;
+  const startY = 80;
   const endX = 250;
-  const endY = 100;
+  const endY = 80;
 
   // 진행 위치 계산
   const currentX = startX + (endX - startX) * progress;
@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     ...SHADOWS.light,
+    marginBottom: SPACING.md,
   },
   fallbackImage: {
     width: 300,
