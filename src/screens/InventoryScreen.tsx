@@ -83,8 +83,8 @@ const InventoryScreen = () => {
 
                 <View style={styles.detailItem}>
                   <PixelText variant="caption">품질:</PixelText>
-                  <PixelText style={{ color: getQualityColor(QUALITY_FACTORS[selectedItem.quality]) }}>
-                    {getQualityText(QUALITY_FACTORS[selectedItem.quality])}
+                  <PixelText style={{ color: getQualityColor(selectedItem.quality) }}>
+                    {getQualityText(selectedItem.quality)}
                   </PixelText>
                 </View>
 

@@ -131,7 +131,7 @@ export const useMarketLogic = (): MarketLogic => {
       }
     } else {
       const inventoryItem = state.player.inventory.find(
-        (item: InventoryItem) => item.itemId === selectedItem && item.quality === quality
+        (item: InventoryItem) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
       );
       if (inventoryItem && quantity < inventoryItem.quantity) {
         setQuantity(quantity + 1);
@@ -206,7 +206,7 @@ export const useMarketLogic = (): MarketLogic => {
 
     // 인벤토리에서 선택한 아이템 찾기
     const inventoryItemIndex = state.player.inventory.findIndex(
-      (item: InventoryItem) => item.itemId === selectedItem && item.quality === quality
+      (item: InventoryItem) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
     );
     const inventoryItem = state.player.inventory[inventoryItemIndex];
 
@@ -301,17 +301,14 @@ export const useMarketLogic = (): MarketLogic => {
       // 판매 로직 - 품질 고려하여 계산
       const marketItem = marketItems.find((item: MarketItem) => item.itemId === selectedItem);
       const inventoryItem = state.player.inventory.find(
-        (item: InventoryItem) => item.itemId === selectedItem && item.quality === quality
+        (item: InventoryItem) => item.itemId === selectedItem && item.quality === QUALITY_FACTORS[quality]
       );
 
       if (marketItem && inventoryItem) {
         // 인벤토리 아이템의 품질을 고려하여 판매 가격 계산
         return (
-          calculatePlayerSellingPrice(
-            marketItem.currentPrice * QUALITY_FACTORS[inventoryItem.quality],
-            state.player,
-            currentCity
-          ) * quantity
+          calculatePlayerSellingPrice(marketItem.currentPrice * inventoryItem.quality, state.player, currentCity) *
+          quantity
         );
       } else if (inventoryItem) {
         return inventoryItem.purchasePrice * 0.7 * quantity;

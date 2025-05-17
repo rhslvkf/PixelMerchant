@@ -29,149 +29,59 @@ import {
 /**
  * 각 액션 타입에 맞는 리듀서 함수를 매핑한 객체
  */
-const reducerMap = {
-  START_NEW_GAME: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "START_NEW_GAME") return state;
-    return startNewGameReducer(state, action.payload.playerName);
-  },
-
-  LOAD_GAME: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "LOAD_GAME") return state;
-    return loadGameReducer(state, action.payload.gameState);
-  },
-
-  TRAVEL_TO_CITY: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "TRAVEL_TO_CITY") return state;
-    return travelToCityReducer(state, action.payload.cityId, action.payload.travelDays);
-  },
-
-  UPDATE_GOLD: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "UPDATE_GOLD") return state;
-    return updateGoldReducer(state, action.payload.amount);
-  },
-
-  UPDATE_SETTINGS: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "UPDATE_SETTINGS") return state;
-    return updateSettingsReducer(state, action.payload.settings);
-  },
-
-  ADD_ITEM_TO_INVENTORY: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "ADD_ITEM_TO_INVENTORY") return state;
-    return addItemToInventoryReducer(
+const reducerMap: Record<GameAction["type"], (state: GameState, action: any) => GameState> = {
+  START_NEW_GAME: (state, action) => startNewGameReducer(state, action.payload.playerName),
+  LOAD_GAME: (state, action) => loadGameReducer(state, action.payload.gameState),
+  TRAVEL_TO_CITY: (state, action) => travelToCityReducer(state, action.payload.cityId, action.payload.travelDays),
+  UPDATE_GOLD: (state, action) => updateGoldReducer(state, action.payload.amount),
+  UPDATE_SETTINGS: (state, action) => updateSettingsReducer(state, action.payload.settings),
+  ADD_ITEM_TO_INVENTORY: (state, action) =>
+    addItemToInventoryReducer(
       state,
       action.payload.itemId,
       action.payload.quantity,
       action.payload.price,
       action.payload.quality
-    );
-  },
-
-  REMOVE_ITEM_FROM_INVENTORY: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "REMOVE_ITEM_FROM_INVENTORY") return state;
-    return removeItemFromInventoryReducer(state, action.payload.itemId, action.payload.quantity);
-  },
-
-  UPDATE_MARKET: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "UPDATE_MARKET") return state;
-    return updateMarketReducer(state, action.payload.cityId);
-  },
-
-  BUY_ITEM: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "BUY_ITEM") return state;
-    return buyItemReducer(
+    ),
+  REMOVE_ITEM_FROM_INVENTORY: (state, action) =>
+    removeItemFromInventoryReducer(state, action.payload.itemId, action.payload.quantity),
+  UPDATE_MARKET: (state, action) => updateMarketReducer(state, action.payload.cityId),
+  BUY_ITEM: (state, action) =>
+    buyItemReducer(
       state,
       action.payload.itemId,
       action.payload.quantity,
       action.payload.cityId,
       action.payload.quality
-    );
-  },
-
-  SELL_ITEM: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "SELL_ITEM") return state;
-    return sellItemReducer(
+    ),
+  SELL_ITEM: (state, action) =>
+    sellItemReducer(
       state,
       action.payload.itemId,
       action.payload.quantity,
       action.payload.cityId,
       action.payload.inventoryIndex
-    );
-  },
-
-  START_TRAVEL: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "START_TRAVEL") return state;
-    return startTravelReducer(state, action.payload.toCityId, action.payload.transportType);
-  },
-
-  PROGRESS_TRAVEL: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "PROGRESS_TRAVEL") return state;
-    return progressTravelReducer(state);
-  },
-
-  COMPLETE_TRAVEL: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "COMPLETE_TRAVEL") return state;
-    return completeTravelReducer(state);
-  },
-
-  PROCESS_TRAVEL_EVENT: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "PROCESS_TRAVEL_EVENT") return state;
-    return processTravelEventReducer(state, action.payload.eventId, action.payload.outcome);
-  },
-
-  ADD_SKILL_EXPERIENCE: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "ADD_SKILL_EXPERIENCE") return state;
-    return addSkillExperienceReducer(state, action.payload.skill, action.payload.amount);
-  },
-
-  UPDATE_FACTION_REPUTATION: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "UPDATE_FACTION_REPUTATION") return state;
-    return updateFactionReputationReducer(state, action.payload.factionId, action.payload.points);
-  },
-
-  PROGRESS_EVENT: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "PROGRESS_EVENT") return state;
-    return progressEventReducer(state, action.payload.eventId);
-  },
-
-  PROCESS_EVENT_CHOICE: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "PROCESS_EVENT_CHOICE") return state;
-    return processEventChoiceReducer(state, action.payload.eventId, action.payload.choiceId, action.payload.eventData);
-  },
-
-  ADD_EVENT: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "ADD_EVENT") return state;
-    return addEventReducer(state, action.payload.event);
-  },
-
-  REMOVE_EVENT: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "REMOVE_EVENT") return state;
-    return removeEventReducer(state, action.payload.eventId);
-  },
-
-  START_NPC_INTERACTION: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "START_NPC_INTERACTION") return state;
-    return startNPCInteractionReducer(state, action.payload.npcId);
-  },
-
-  SELECT_DIALOGUE_CHOICE: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "SELECT_DIALOGUE_CHOICE") return state;
-    return selectDialogueChoiceReducer(state, action.payload.choiceId);
-  },
-
-  END_NPC_INTERACTION: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "END_NPC_INTERACTION") return state;
-    return endNPCInteractionReducer(state);
-  },
-
-  TRADE_WITH_NPC: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "TRADE_WITH_NPC") return state;
-    return tradeWithNPCReducer(state, action.payload.npcId, action.payload.tradeId, action.payload.quantity);
-  },
-
-  RESTOCK_NPC_TRADES: (state: GameState, action: GameAction): GameState => {
-    if (action.type !== "RESTOCK_NPC_TRADES") return state;
-    return restockNPCTradesReducer(state, action.payload.currentDate);
-  },
+    ),
+  START_TRAVEL: (state, action) => startTravelReducer(state, action.payload.toCityId, action.payload.transportType),
+  PROGRESS_TRAVEL: (state) => progressTravelReducer(state),
+  COMPLETE_TRAVEL: (state) => completeTravelReducer(state),
+  PROCESS_TRAVEL_EVENT: (state, action) =>
+    processTravelEventReducer(state, action.payload.eventId, action.payload.outcome),
+  ADD_SKILL_EXPERIENCE: (state, action) =>
+    addSkillExperienceReducer(state, action.payload.skill, action.payload.amount),
+  UPDATE_FACTION_REPUTATION: (state, action) =>
+    updateFactionReputationReducer(state, action.payload.factionId, action.payload.points),
+  PROGRESS_EVENT: (state, action) => progressEventReducer(state, action.payload.eventId),
+  PROCESS_EVENT_CHOICE: (state, action) =>
+    processEventChoiceReducer(state, action.payload.eventId, action.payload.choiceId, action.payload.eventData),
+  ADD_EVENT: (state, action) => addEventReducer(state, action.payload.event),
+  REMOVE_EVENT: (state, action) => removeEventReducer(state, action.payload.eventId),
+  START_NPC_INTERACTION: (state, action) => startNPCInteractionReducer(state, action.payload.npcId),
+  SELECT_DIALOGUE_CHOICE: (state, action) => selectDialogueChoiceReducer(state, action.payload.choiceId),
+  END_NPC_INTERACTION: (state) => endNPCInteractionReducer(state),
+  TRADE_WITH_NPC: (state, action) =>
+    tradeWithNPCReducer(state, action.payload.npcId, action.payload.tradeId, action.payload.quantity),
+  RESTOCK_NPC_TRADES: (state, action) => restockNPCTradesReducer(state, action.payload.currentDate),
 };
 
 /**
