@@ -9,7 +9,7 @@ import InventoryItemComponent from "../components/inventory/InventoryItem";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { ITEMS } from "../data/items";
 import { useInventory } from "../hooks/useInventory";
-import { InventoryItem, ItemCategory } from "../models";
+import { InventoryItem, ItemCategory, QUALITY_FACTORS } from "../models";
 import { AppNavigationProp } from "../navigation/types";
 
 const InventoryScreen = () => {
@@ -83,8 +83,8 @@ const InventoryScreen = () => {
 
                 <View style={styles.detailItem}>
                   <PixelText variant="caption">품질:</PixelText>
-                  <PixelText style={{ color: getQualityColor(selectedItem.quality) }}>
-                    {getQualityText(selectedItem.quality)}
+                  <PixelText style={{ color: getQualityColor(QUALITY_FACTORS[selectedItem.quality]) }}>
+                    {getQualityText(QUALITY_FACTORS[selectedItem.quality])}
                   </PixelText>
                 </View>
 

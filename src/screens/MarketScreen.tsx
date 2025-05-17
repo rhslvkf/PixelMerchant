@@ -259,9 +259,8 @@ const MarketScreen = () => {
                       ) : (
                         <PixelText variant="caption">
                           보유:{" "}
-                          {state.player.inventory.find(
-                            (i) => i.itemId === selectedItem && i.quality === QUALITY_FACTORS[quality]
-                          )?.quantity || 0}
+                          {state.player.inventory.find((i) => i.itemId === selectedItem && i.quality === quality)
+                            ?.quantity || 0}
                           개
                         </PixelText>
                       )}
