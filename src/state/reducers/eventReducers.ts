@@ -74,6 +74,22 @@ export function processEventChoiceReducer(
     // (간단한 구현에서는 생략)
   }
 
+  // 이벤트가 여행 관련인지 확인
+  const isTravelEvent = activeEvent.type === "travel";
+
+  // 여행 이벤트인 경우 travelState의 이벤트도 업데이트
+  let updatedTravelState = state.travelState;
+  if (isTravelEvent && updatedTravelState) {
+    const updatedTravelEvents = updatedTravelState.events.map((event) =>
+      event.id === eventId ? { ...event, processed: true } : event
+    );
+
+    updatedTravelState = {
+      ...updatedTravelState,
+      events: updatedTravelEvents,
+    };
+  }
+
   return {
     ...state,
     player: updatedPlayer,
@@ -81,6 +97,7 @@ export function processEventChoiceReducer(
       ...state.world,
       events: updatedEvents,
     },
+    travelState: updatedTravelState,
   };
 }
 

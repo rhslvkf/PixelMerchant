@@ -129,7 +129,6 @@ export function startTravelReducer(state: GameState, toCityId: string, transport
 /**
  * 여행 진행 리듀서
  */
-// src/state/reducers/travelReducers.ts
 export function progressTravelReducer(state: GameState): GameState {
   if (!state.travelState) return state;
 
@@ -148,14 +147,48 @@ export function progressTravelReducer(state: GameState): GameState {
     };
   }
 
-  // 수정: 이벤트 상태를 변경하지 않고 날짜만 업데이트
+  // 해당 날짜의 이벤트 확인
+  const todayEvents = events.filter((e) => e.day === newCurrentDay && !e.processed);
+
+  // 오늘 이벤트가 있으면 글로벌 이벤트로 등록
+  if (todayEvents.length > 0) {
+    // 첫 번째 이벤트만 처리
+    const firstEvent = todayEvents[0];
+
+    // 글로벌 이벤트 배열에 추가
+    const globalEvents = [...state.world.events];
+    const exists = globalEvents.some((e) => e.id === firstEvent.id);
+
+    if (!exists) {
+      globalEvents.push({
+        id: firstEvent.id,
+        eventId: firstEvent.eventId,
+        type: "travel",
+        status: "active",
+      });
+    }
+
+    return {
+      ...state,
+      currentDate: newDate,
+      travelState: {
+        ...state.travelState,
+        currentDay: newCurrentDay,
+      },
+      world: {
+        ...state.world,
+        events: globalEvents,
+      },
+    };
+  }
+
+  // 이벤트 없으면 그냥 진행
   return {
     ...state,
     currentDate: newDate,
     travelState: {
       ...state.travelState,
       currentDay: newCurrentDay,
-      // events를 업데이트하지 않음 - processed 값 유지
     },
   };
 }

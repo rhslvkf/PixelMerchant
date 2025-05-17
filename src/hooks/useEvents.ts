@@ -130,6 +130,18 @@ export const useEvents = (eventId?: string): UseEventsReturn => {
     setSelectedChoice(null);
     setSelectedOutcome(null);
 
+    // 이벤트 타입이 여행인 경우 추가 처리
+    if (activeEventRef.type === "travel") {
+      // 트래블 이벤트 처리 액션 디스패치
+      dispatch({
+        type: "PROCESS_TRAVEL_EVENT",
+        payload: {
+          eventId: activeEventRef.id,
+          choiceId: selectedChoice,
+        },
+      });
+    }
+
     // 이벤트 화면에서 나가기
     if (navigation.canGoBack()) {
       navigation.goBack();

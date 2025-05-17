@@ -65,6 +65,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: `${COLORS.background.dark}B3`,
     borderRadius: BORDERS.radius.md,
     padding: SPACING.lg,

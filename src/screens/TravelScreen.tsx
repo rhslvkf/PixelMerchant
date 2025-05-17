@@ -54,10 +54,13 @@ const TravelScreen = () => {
     const activeEvent = travelState.events.find((event) => event.day === travelState.currentDay && !event.processed);
 
     if (activeEvent) {
-      setCurrentEvent(activeEvent);
-      setShowEvent(true);
-    } else {
-      setShowEvent(false);
+      // 이벤트 발견 시 EventScreen으로 네비게이션
+      navigation.navigate("Event", {
+        eventId: activeEvent.id,
+        eventType: "travel",
+      });
+
+      console.log("이벤트 발견, EventScreen으로 이동:", activeEvent);
     }
   };
 
@@ -271,11 +274,6 @@ const TravelScreen = () => {
                 )}
               </View>
             </View>
-          )}
-
-          {/* 이벤트 화면 */}
-          {isTraveling && showEvent && currentEvent && (
-            <TravelEvent event={currentEvent} onChoice={handleEventChoice} />
           )}
         </View>
       </ImageBackground>
