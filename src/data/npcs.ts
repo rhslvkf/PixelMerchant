@@ -50,8 +50,8 @@ const convertNPCData = (data: any): Record<string, NPC> => {
 export const NPCS: Record<string, NPC> = convertNPCData(npcsData);
 
 export const NPC_PORTRAITS: Record<string, any> = {
-  merchant_male_1: require("../assets/images/character_background.webp"),
-  female_informant_1: require("../assets/images/character_background.webp"),
+  marcus_gold: require("../assets/images/npcs/marcus_gold.webp"),
+  lyra_silverbrook: require("../assets/images/npcs/lyra_silverbrook.webp"),
 };
 
 // NPC ID로 NPC 찾기
