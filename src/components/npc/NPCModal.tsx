@@ -84,28 +84,17 @@ const NPCModal: React.FC<NPCModalProps> = ({ visible, onClose }) => {
             />
           )}
 
-          {/* 하단 버튼 */}
+          {/* 대화 종료 메시지 (대화가 끝났고 거래 화면이 아닐 때만) */}
           {!showingTrades && !currentDialogue && (
             <View style={styles.endedDialogueContainer}>
               <PixelText style={styles.endedDialogueText}>{npc.name}과의 대화가 종료되었습니다.</PixelText>
-
-              {npc.trades && <Button title="거래 보기" onPress={handleToggleTrades} style={styles.tradeButton} />}
-
-              <Button title="대화 종료" type="secondary" onPress={handleClose} style={styles.closeButton} />
             </View>
           )}
 
-          {/* 거래/대화 전환 버튼 */}
-          {currentDialogue && npc.trades && (
-            <View style={styles.tradeButtonContainer}>
-              <Button
-                title={showingTrades ? "대화로 돌아가기" : "거래 보기"}
-                type="secondary"
-                onPress={handleToggleTrades}
-                style={styles.tradeToggleButton}
-              />
-            </View>
-          )}
+          {/* 항상 표시되는 대화 종료 버튼 */}
+          <View style={styles.footerContainer}>
+            <Button title="대화 종료" type="secondary" onPress={handleClose} style={styles.closeButton} />
+          </View>
         </View>
       </View>
     </Modal>
@@ -146,6 +135,10 @@ const styles = StyleSheet.create({
   },
   tradeToggleButton: {
     minWidth: 150,
+  },
+  footerContainer: {
+    marginTop: SPACING.md,
+    alignItems: "center",
   },
 });
 

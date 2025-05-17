@@ -1,21 +1,21 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState, useMemo } from "react";
-import { ImageBackground, Image, ScrollView, StyleSheet, TouchableOpacity, View, Modal } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Image, ImageBackground, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
+import NPCList from "../components/npc/NPCList";
+import NPCModal from "../components/npc/NPCModal";
 import PixelText from "../components/PixelText";
 import TravelModal from "../components/TravelModal";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { CITY_IMAGES } from "../data/CityImages";
 import { ITEMS } from "../data/items";
+import { useNPCInteraction } from "../hooks/useNPCInteraction";
 import { formatDate, getSeasonName } from "../logic/DateSystem";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 import { formatRating } from "../utils/formatting";
 import { getCultureName } from "../utils/localization";
-import { useNPCInteraction } from "../hooks/useNPCInteraction";
-import NPCModal from "../components/npc/NPCModal";
-import NPCList from "../components/npc/NPCList";
 
 // 공통 컨테이너 스타일을 위한 상수
 const CONTAINER_BACKGROUND = `${COLORS.background.dark}B3`;
@@ -87,15 +87,13 @@ const SpecialtiesList = React.memo(({ specialties }: SpecialtiesListProps) => (
 // 장소 목록 컴포넌트
 interface PlacesGridProps {
   onMarketPress: () => void;
-  onNPCPress: () => void;
 }
 
-const PlacesGrid = React.memo(({ onMarketPress, onNPCPress }: PlacesGridProps) => (
+const PlacesGrid = React.memo(({ onMarketPress }: PlacesGridProps) => (
   <View style={styles.placesContainer}>
     <PixelText style={styles.sectionTitle}>이용 가능 장소</PixelText>
     <View style={styles.placesGrid}>
       <PlaceButton name="시장" onPress={onMarketPress} />
-      <PlaceButton name="주민" onPress={onNPCPress} />
       <PlaceButton name="여관" />
       <PlaceButton name="길드" />
     </View>
@@ -200,7 +198,7 @@ const CityScreen = () => {
             <NPCList npcs={npcsInCurrentCity} onSelectNPC={handleSelectNPC} />
           </View>
 
-          <PlacesGrid onMarketPress={goToMarket} onNPCPress={() => setShowNPCList(true)} />
+          <PlacesGrid onMarketPress={goToMarket} />
         </ScrollView>
 
         {/* 푸터 섹션 */}
@@ -339,7 +337,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   placeButton: {
-    width: "48%",
+    width: "31%",
     backgroundColor: COLORS.berdan,
     borderRadius: BORDERS.radius.md,
     borderWidth: 1,
