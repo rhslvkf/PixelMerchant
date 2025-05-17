@@ -11,6 +11,9 @@ export const ITEM_KEYS = {
   LEATHER: "leather",
   POTTERY: "pottery",
   HERBS: "herbs",
+  INFORMATION: "information",
+  MAP: "map",
+  SECRET_RECIPE: "secret_recipe",
 } as const;
 
 // 기본 상품 데이터
@@ -235,6 +238,72 @@ export const ITEMS: Record<string, Item> = {
       [Season.WINTER]: 0.3,
     },
   },
+  information: {
+    id: "information",
+    name: "정보",
+    description: "귀중한 정보는 때로 금보다 값지다.",
+    category: ItemCategory.INFORMATION,
+    basePrice: 100,
+    weight: 0,
+    rarity: 3,
+    regionalFactors: {
+      berdan_empire: 0,
+      riona_union: 0,
+      kragmore_mountains: 0,
+      sahel_desert: 0,
+      azure_islands: 0,
+    },
+    seasonalFactors: {
+      [Season.SPRING]: 0,
+      [Season.SUMMER]: 0,
+      [Season.FALL]: 0,
+      [Season.WINTER]: 0,
+    },
+  },
+  map: {
+    id: "map",
+    name: "지도",
+    description: "새로운 경로와 미지의 장소를 보여주는 지도.",
+    category: ItemCategory.MAP,
+    basePrice: 150,
+    weight: 0.5,
+    rarity: 4,
+    regionalFactors: {
+      berdan_empire: 0,
+      riona_union: 0,
+      kragmore_mountains: 0,
+      sahel_desert: 0,
+      azure_islands: 0,
+    },
+    seasonalFactors: {
+      [Season.SPRING]: 0,
+      [Season.SUMMER]: 0,
+      [Season.FALL]: 0,
+      [Season.WINTER]: 0,
+    },
+  },
+  secret_recipe: {
+    id: "secret_recipe",
+    name: "비밀 제조법",
+    description: "특별한 아이템을 제작하는 비밀 제조법.",
+    category: ItemCategory.INFORMATION,
+    basePrice: 300,
+    weight: 0.5,
+    rarity: 5,
+    regionalFactors: {
+      berdan_empire: 0,
+      riona_union: 0,
+      kragmore_mountains: 0,
+      sahel_desert: 0,
+      azure_islands: 0,
+    },
+    seasonalFactors: {
+      [Season.SPRING]: 0,
+      [Season.SUMMER]: 0,
+      [Season.FALL]: 0,
+      [Season.WINTER]: 0,
+    },
+  },
 };
 
 export function getAllItems(): Item[] {
@@ -244,3 +313,30 @@ export function getAllItems(): Item[] {
 export function getItemById(id: string): Item | undefined {
   return ITEMS[id];
 }
+
+export const INFO_ITEMS: Record<string, Item> = {
+  market_intelligence: {
+    id: "market_intelligence",
+    name: "시장 정보",
+    description: "다양한 도시의 현재 시장 동향과 가격 정보.",
+    category: ItemCategory.INFORMATION,
+    basePrice: 100,
+    weight: 0,
+    rarity: 3,
+    regionalFactors: {
+      berdan_empire: 0,
+      riona_union: 0,
+      kragmore_mountains: 0,
+      sahel_desert: 0,
+      azure_islands: 0,
+    },
+    seasonalFactors: {
+      [Season.SPRING]: 0,
+      [Season.SUMMER]: 0,
+      [Season.FALL]: 0,
+      [Season.WINTER]: 0,
+    },
+  },
+
+  // 추가 정보 아이템...
+};

@@ -11,6 +11,7 @@ export type RootStackParamList = {
   Character: undefined;
   Travel: { destination: string };
   Event: { eventId: string; eventType: "travel" | "city" | "story" | "trade" };
+  NPCInteraction: { npcId: string };
 };
 
 // 네비게이션 타입

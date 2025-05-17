@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState, useMemo } from "react";
-import { ImageBackground, Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ImageBackground, Image, ScrollView, StyleSheet, TouchableOpacity, View, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import PixelText from "../components/PixelText";
@@ -13,6 +13,9 @@ import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 import { formatRating } from "../utils/formatting";
 import { getCultureName } from "../utils/localization";
+import { useNPCInteraction } from "../hooks/useNPCInteraction";
+import NPCModal from "../components/npc/NPCModal";
+import NPCList from "../components/npc/NPCList";
 
 // 공통 컨테이너 스타일을 위한 상수
 const CONTAINER_BACKGROUND = `${COLORS.background.dark}B3`;
@@ -84,16 +87,17 @@ const SpecialtiesList = React.memo(({ specialties }: SpecialtiesListProps) => (
 // 장소 목록 컴포넌트
 interface PlacesGridProps {
   onMarketPress: () => void;
+  onNPCPress: () => void;
 }
 
-const PlacesGrid = React.memo(({ onMarketPress }: PlacesGridProps) => (
+const PlacesGrid = React.memo(({ onMarketPress, onNPCPress }: PlacesGridProps) => (
   <View style={styles.placesContainer}>
     <PixelText style={styles.sectionTitle}>이용 가능 장소</PixelText>
     <View style={styles.placesGrid}>
       <PlaceButton name="시장" onPress={onMarketPress} />
+      <PlaceButton name="주민" onPress={onNPCPress} />
       <PlaceButton name="여관" />
       <PlaceButton name="길드" />
-      <PlaceButton name="항구" />
     </View>
   </View>
 ));
@@ -102,6 +106,9 @@ const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const { state, dispatch } = useGame();
   const [showTravelModal, setShowTravelModal] = useState(false);
+  const [showNPCList, setShowNPCList] = useState(false);
+
+  const { npcsInCurrentCity, npcModalVisible, startInteraction, endInteraction } = useNPCInteraction();
 
   // 현재 도시 정보 가져오기
   const currentCity = state.world.cities[state.currentCityId];
@@ -139,6 +146,11 @@ const CityScreen = () => {
   const goToMarket = () => navigation.navigate("Market");
   const goToInventory = () => navigation.navigate("Inventory");
   const goToCharacter = () => navigation.navigate("Character");
+
+  // NPC 선택 핸들러
+  const handleSelectNPC = (npcId: string) => {
+    startInteraction(npcId);
+  };
 
   // UI 렌더링
   return (
@@ -182,7 +194,13 @@ const CityScreen = () => {
 
           <SpecialtiesList specialties={currentCity.specialties} />
 
-          <PlacesGrid onMarketPress={goToMarket} />
+          {/* NPC 목록 섹션 추가 */}
+          <View style={styles.npcContainer}>
+            <PixelText style={styles.sectionTitle}>주민</PixelText>
+            <NPCList npcs={npcsInCurrentCity} onSelectNPC={handleSelectNPC} />
+          </View>
+
+          <PlacesGrid onMarketPress={goToMarket} onNPCPress={() => setShowNPCList(true)} />
         </ScrollView>
 
         {/* 푸터 섹션 */}
@@ -193,7 +211,30 @@ const CityScreen = () => {
         </View>
       </ImageBackground>
 
+      {/* 모달 */}
       <TravelModal visible={showTravelModal} onClose={toggleTravelModal} destinations={connectedCities} />
+      <NPCModal visible={npcModalVisible} onClose={endInteraction} />
+
+      {/* NPC 목록 모달 */}
+      {showNPCList && (
+        <Modal transparent animationType="fade" visible={showNPCList} onRequestClose={() => setShowNPCList(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <PixelText variant="subtitle" style={styles.modalTitle}>
+                도시 주민
+              </PixelText>
+              <NPCList
+                npcs={npcsInCurrentCity}
+                onSelectNPC={(npcId) => {
+                  setShowNPCList(false);
+                  startInteraction(npcId);
+                }}
+              />
+              <Button title="닫기" onPress={() => setShowNPCList(false)} type="secondary" style={styles.closeButton} />
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };
@@ -337,6 +378,31 @@ const styles = StyleSheet.create({
   silverText: {
     color: COLORS.silver,
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "90%",
+    backgroundColor: COLORS.background.dark,
+    borderRadius: BORDERS.radius.md,
+    padding: SPACING.lg,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
+  modalTitle: {
+    textAlign: "center",
+    marginBottom: SPACING.md,
+    color: COLORS.primary,
+  },
+  closeButton: {
+    marginTop: SPACING.md,
+  },
+  npcContainer: {
+    ...containerStyle,
   },
 });
 

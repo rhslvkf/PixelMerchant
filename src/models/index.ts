@@ -11,3 +11,6 @@ export * from "./world";
 
 // 이벤트 관련 타입 내보내기
 export * from "./events";
+
+// NPC 관련 타입 내보내기
+export * from "./npc";

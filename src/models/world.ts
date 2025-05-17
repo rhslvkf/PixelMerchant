@@ -1,4 +1,5 @@
 import { MarketEvent, Market } from "./economy";
+import { NPCState } from "./npc";
 import { Player, GameSettings } from "./player";
 
 export interface GameDate {
@@ -106,4 +107,5 @@ export interface GameState {
   gameSettings: GameSettings;
   world: World;
   travelState?: TravelState; // 여행 중일 때만 존재
+  npcState: NPCState;
 }

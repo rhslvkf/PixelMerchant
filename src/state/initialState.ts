@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS } from "../config/constants";
 import { CITIES, REGIONS } from "../data/cities";
-import { GameState, Player, Season, SkillType } from "../models/index";
+import { NPCS } from "../data/npcs";
+import { GameState, NPCState, Player, Season, SkillType } from "../models/index";
 
 // 초기 플레이어 상태 정의
 export const initialPlayer: Player = {
@@ -16,6 +17,13 @@ export const initialPlayer: Player = {
     [SkillType.DIPLOMACY]: 1,
     [SkillType.EXPLORATION]: 1,
   },
+  skillExperience: {
+    [SkillType.TRADE]: 0,
+    [SkillType.LOGISTICS]: 0,
+    [SkillType.INSIGHT]: 0,
+    [SkillType.DIPLOMACY]: 0,
+    [SkillType.EXPLORATION]: 0,
+  },
   reputation: {},
   stats: {
     daysPlayed: 0,
@@ -26,6 +34,14 @@ export const initialPlayer: Player = {
     travelDistance: 0,
     successfulDeals: 0,
   },
+};
+
+// NPC 초기 상태 정의
+export const initialNPCState: NPCState = {
+  npcs: NPCS,
+  interactions: {},
+  activeNPC: null,
+  currentDialogueId: null,
 };
 
 // 게임 초기 상태 정의
@@ -53,4 +69,5 @@ export const initialGameState: GameState = {
       },
     },
   },
+  npcState: initialNPCState,
 };

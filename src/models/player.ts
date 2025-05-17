@@ -18,7 +18,7 @@ export interface InventoryItem {
   itemId: string;
   quantity: number;
   purchasePrice: number;
-  quality: number;
+  quality: ItemQuality;
 }
 
 export enum SkillType {

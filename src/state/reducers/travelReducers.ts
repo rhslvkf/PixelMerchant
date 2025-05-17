@@ -1,6 +1,6 @@
 import { advanceDate } from "../../logic/DateSystem";
 import { calculateArrivalDate, createTravelRoute, generateTravelEvents } from "../../logic/TravelSystem";
-import { GameState, TransportType } from "../../models/index";
+import { GameDate, GameState, TransportType } from "../../models/index";
 
 /**
  * 도시 이동 리듀서
@@ -12,7 +12,8 @@ export function travelToCityReducer(state: GameState, cityId: string, travelDays
     newDate = advanceDate(newDate);
   }
 
-  return {
+  // NPC 재고 업데이트
+  const updatedState = {
     ...state,
     currentCityId: cityId,
     currentDate: newDate,
@@ -27,6 +28,65 @@ export function travelToCityReducer(state: GameState, cityId: string, travelDays
       },
     },
   };
+
+  return restockNPCTradesReducer(updatedState, newDate);
+}
+
+/**
+ * NPC 재고 보충 리듀서 - 상태 업데이트만 담당
+ */
+function restockNPCTradesReducer(state: GameState, currentDate: GameDate): GameState {
+  const updatedNPCs = { ...state.npcState.npcs };
+
+  Object.keys(updatedNPCs).forEach((npcId) => {
+    const npc = updatedNPCs[npcId];
+
+    if (!npc.trades) return;
+
+    const updatedTrades = npc.trades.map((trade) => {
+      // 마지막 재고 보충 날짜 확인
+      if (!trade.lastRestock) {
+        return {
+          ...trade,
+          lastRestock: currentDate,
+        };
+      }
+
+      // 재고 보충 주기 계산
+      const daysSinceRestock = calculateDaysDifference(trade.lastRestock, currentDate);
+
+      if (daysSinceRestock >= trade.restockDays) {
+        // 재고 보충
+        return {
+          ...trade,
+          quantityAvailable: trade.maxQuantity || Math.floor(Math.random() * 5) + 1, // 기본 1-5개
+          lastRestock: currentDate,
+        };
+      }
+
+      return trade;
+    });
+
+    updatedNPCs[npcId] = {
+      ...npc,
+      trades: updatedTrades,
+    };
+  });
+
+  return {
+    ...state,
+    npcState: {
+      ...state.npcState,
+      npcs: updatedNPCs,
+    },
+  };
+}
+
+// 날짜 차이 계산 헬퍼 함수
+function calculateDaysDifference(date1: GameDate, date2: GameDate): number {
+  const day1 = date1.day + (date1.month - 1) * 30 + (date1.year - 1) * 360;
+  const day2 = date2.day + (date2.month - 1) * 30 + (date2.year - 1) * 360;
+  return Math.abs(day2 - day1);
 }
 
 /**

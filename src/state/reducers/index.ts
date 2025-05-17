@@ -4,6 +4,13 @@ import { addEventReducer, processEventChoiceReducer, progressEventReducer, remov
 import { loadGameReducer, updateSettingsReducer } from "./gameReducers";
 import { buyItemReducer, sellItemReducer, updateMarketReducer } from "./marketReducers";
 import {
+  endNPCInteractionReducer,
+  restockNPCTradesReducer,
+  selectDialogueChoiceReducer,
+  startNPCInteractionReducer,
+  tradeWithNPCReducer,
+} from "./npcReducers";
+import {
   addItemToInventoryReducer,
   addSkillExperienceReducer,
   removeItemFromInventoryReducer,
@@ -139,6 +146,31 @@ const reducerMap = {
   REMOVE_EVENT: (state: GameState, action: GameAction): GameState => {
     if (action.type !== "REMOVE_EVENT") return state;
     return removeEventReducer(state, action.payload.eventId);
+  },
+
+  START_NPC_INTERACTION: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "START_NPC_INTERACTION") return state;
+    return startNPCInteractionReducer(state, action.payload.npcId);
+  },
+
+  SELECT_DIALOGUE_CHOICE: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "SELECT_DIALOGUE_CHOICE") return state;
+    return selectDialogueChoiceReducer(state, action.payload.choiceId);
+  },
+
+  END_NPC_INTERACTION: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "END_NPC_INTERACTION") return state;
+    return endNPCInteractionReducer(state);
+  },
+
+  TRADE_WITH_NPC: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "TRADE_WITH_NPC") return state;
+    return tradeWithNPCReducer(state, action.payload.npcId, action.payload.tradeId, action.payload.quantity);
+  },
+
+  RESTOCK_NPC_TRADES: (state: GameState, action: GameAction): GameState => {
+    if (action.type !== "RESTOCK_NPC_TRADES") return state;
+    return restockNPCTradesReducer(state, action.payload.currentDate);
   },
 };
 
