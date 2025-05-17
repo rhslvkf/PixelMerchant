@@ -18,7 +18,7 @@ export type GameAction =
   | { type: "START_TRAVEL"; payload: { toCityId: string; transportType: TransportType } }
   | { type: "PROGRESS_TRAVEL" }
   | { type: "COMPLETE_TRAVEL" }
-  | { type: "PROCESS_TRAVEL_EVENT"; payload: { eventId: string; outcome: any } }
+  | { type: "PROCESS_TRAVEL_EVENT"; payload: { eventId: string; choiceId: string } }
   | { type: "ADD_SKILL_EXPERIENCE"; payload: { skill: SkillType; amount: number } }
   | { type: "UPDATE_FACTION_REPUTATION"; payload: { factionId: string; points: number } }
   | { type: "PROGRESS_EVENT"; payload: { eventId: string } }

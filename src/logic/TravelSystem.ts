@@ -1,3 +1,4 @@
+import { getRandomEvent } from "../data/travelEvents";
 import { City, GameDate, Season, TransportType, TravelEvent, TravelRoute } from "../models/index";
 import { advanceDate } from "./DateSystem";
 
@@ -67,6 +68,11 @@ export function generateTravelEvents(route: TravelRoute, currentDate: GameDate, 
   const updatedRoute = { ...route, events: [] as TravelEvent[] };
   const events: TravelEvent[] = [];
 
+  // 출발/도착 도시 정보
+  const fromCityId = route.fromCityId;
+  const toCityId = route.toCityId;
+  const locations = [fromCityId, toCityId];
+
   // 하루 단위로 이벤트 발생 확인
   for (let day = 1; day <= estimatedDays; day++) {
     // 기본 이벤트 발생 확률 (여행일당 40%)
@@ -85,11 +91,12 @@ export function generateTravelEvents(route: TravelRoute, currentDate: GameDate, 
 
     // 이벤트 발생 여부 결정
     if (Math.random() < eventChance) {
-      // 실제 게임에서는 이벤트 ID 선택 로직 구현 필요
-      const eventId = `travel_event_${day}`;
+      // 실제 이벤트 데이터에서 이벤트 ID 선택
+      const eventId = getRandomEvent(locations, currentDate.season, dangerLevel);
 
       events.push({
-        id: eventId,
+        id: `travel_${day}_${eventId}`, // 고유 ID 생성 (day와 실제 이벤트 ID 조합)
+        eventId: eventId, // 실제 이벤트 데이터 ID 저장
         day,
         processed: false,
       });

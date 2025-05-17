@@ -1,4 +1,6 @@
+import { getEventById } from "../../data/travelEvents";
 import { advanceDate } from "../../logic/DateSystem";
+import { applyEventEffects, selectEventOutcome } from "../../logic/EventSystem";
 import { calculateArrivalDate, createTravelRoute, generateTravelEvents } from "../../logic/TravelSystem";
 import { GameDate, GameState, TransportType } from "../../models/index";
 
@@ -196,19 +198,70 @@ export function completeTravelReducer(state: GameState): GameState {
 /**
  * 여행 이벤트 처리 리듀서
  */
-export function processTravelEventReducer(state: GameState, eventId: string, outcome: any): GameState {
+export function processTravelEventReducer(state: GameState, eventId: string, choiceId: string): GameState {
   if (!state.travelState) return state;
 
-  // 이벤트 결과 처리 (실제 구현에서는 outcome에 따라 다양한 효과 적용)
-  // 예시: 골드 변경, 아이템 획득/손실, 상태 변경 등
+  // 이벤트 찾기
+  const travelEvent = state.travelState.events.find((e) => e.id === eventId);
+  if (!travelEvent) return state;
 
-  // 이 예제에서는 이벤트를 처리됨으로 표시만 함
+  // 이벤트 데이터 가져오기
+  const eventData = getEventById(travelEvent.eventId);
+  if (!eventData) {
+    // 이벤트 데이터가 없으면 처리됨으로만 표시
+    const updatedEvents = state.travelState.events.map((event) =>
+      event.id === eventId ? { ...event, processed: true } : event
+    );
+    return {
+      ...state,
+      travelState: {
+        ...state.travelState,
+        events: updatedEvents,
+      },
+    };
+  }
+
+  // 선택한 선택지 찾기
+  const choice = eventData.choices.find((c) => c.id === choiceId);
+  if (!choice) {
+    // 선택지가 없으면 그냥 처리됨으로 표시
+    const updatedEvents = state.travelState.events.map((event) =>
+      event.id === eventId ? { ...event, processed: true } : event
+    );
+    return {
+      ...state,
+      travelState: {
+        ...state.travelState,
+        events: updatedEvents,
+      },
+    };
+  }
+
+  // 스킬 보너스 계산
+  let skillBonus = 0;
+  if (choice.requiredSkill) {
+    const playerSkillLevel = state.player.skills[choice.requiredSkill.skill] || 0;
+    const requiredLevel = choice.requiredSkill.level;
+    if (playerSkillLevel >= requiredLevel) {
+      // 초과 레벨당 보너스 증가 (10%씩)
+      skillBonus = (playerSkillLevel - requiredLevel + 1) * 0.1;
+    }
+  }
+
+  // 결과 선택 및 효과 적용
+  const outcome = choice.outcomes.length === 1 ? choice.outcomes[0] : selectEventOutcome(choice.outcomes, skillBonus);
+
+  // 효과 적용
+  const updatedPlayer = applyEventEffects(state.player, outcome.effects);
+
+  // 이벤트 처리됨으로 표시
   const updatedEvents = state.travelState.events.map((event) =>
     event.id === eventId ? { ...event, processed: true } : event
   );
 
   return {
     ...state,
+    player: updatedPlayer,
     travelState: {
       ...state.travelState,
       events: updatedEvents,

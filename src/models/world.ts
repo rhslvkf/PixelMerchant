@@ -88,6 +88,7 @@ export interface TravelRoute {
 
 export interface TravelEvent {
   id: string;
+  eventId: string;
   day: number; // 여행 몇 일차에 발생하는지
   processed: boolean;
 }

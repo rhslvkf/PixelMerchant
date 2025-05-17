@@ -88,15 +88,15 @@ const TravelScreen = () => {
   };
 
   // 이벤트 처리 함수
-  const handleEventChoice = (outcomeId: string) => {
+  const handleEventChoice = (choiceId: string) => {
     if (!currentEvent) return;
 
-    // 이벤트 처리 액션 (간단한 예시, 실제로는 더 복잡할 수 있음)
+    // 이벤트 처리 액션 디스패치
     dispatch({
       type: "PROCESS_TRAVEL_EVENT",
       payload: {
         eventId: currentEvent.id,
-        outcome: outcomeId,
+        choiceId: choiceId,
       },
     });
 
