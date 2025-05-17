@@ -26,49 +26,59 @@ const EventCard: React.FC<EventCardProps> = ({
   // 결과 선택됨 - 결과 컴포넌트 표시
   if (selectedChoice && selectedOutcome) {
     return (
-      <View style={styles.container}>
-        <PixelText variant="subtitle" style={styles.title}>
-          {event.title}
-        </PixelText>
-        <EventOutcome outcome={selectedOutcome} onContinue={onConfirmChoice} />
+      <View style={styles.wrapper}>
+        <View style={styles.container}>
+          <PixelText variant="subtitle" style={styles.title}>
+            {event.title}
+          </PixelText>
+          <EventOutcome outcome={selectedOutcome} onContinue={onConfirmChoice} />
+        </View>
       </View>
     );
   }
 
   // 선택지 선택 대기 중 - 선택지 표시
   return (
-    <View style={styles.container}>
-      <PixelText variant="subtitle" style={styles.title}>
-        {event.title}
-      </PixelText>
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        <PixelText variant="subtitle" style={styles.title}>
+          {event.title}
+        </PixelText>
 
-      <View style={styles.descriptionContainer}>
-        <PixelText style={styles.description}>{event.description}</PixelText>
-      </View>
+        <View style={styles.descriptionContainer}>
+          <PixelText style={styles.description}>{event.description}</PixelText>
+        </View>
 
-      <View style={styles.choicesContainer}>
-        <PixelText style={styles.choiceHeader}>어떻게 하시겠습니까?</PixelText>
+        <View style={styles.choicesContainer}>
+          <PixelText style={styles.choiceHeader}>어떻게 하시겠습니까?</PixelText>
 
-        {event.choices.map((choice) => (
-          <EventChoice
-            key={choice.id}
-            choice={choice}
-            isSelected={selectedChoice === choice.id}
-            canSelect={canSelectChoice(choice)}
-            onSelect={onSelectChoice}
-          />
-        ))}
+          {event.choices.map((choice) => (
+            <EventChoice
+              key={choice.id}
+              choice={choice}
+              isSelected={selectedChoice === choice.id}
+              canSelect={canSelectChoice(choice)}
+              onSelect={onSelectChoice}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
     backgroundColor: `${COLORS.background.dark}B3`,
     borderRadius: BORDERS.radius.md,
-    padding: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.xl,
     marginBottom: SPACING.md,
     ...SHADOWS.medium,
   },
@@ -87,7 +97,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   choicesContainer: {
-    flex: 1,
+    marginBottom: SPACING.md,
   },
   choiceHeader: {
     fontWeight: "bold",

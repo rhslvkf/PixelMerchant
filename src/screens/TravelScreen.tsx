@@ -59,8 +59,6 @@ const TravelScreen = () => {
         eventId: activeEvent.id,
         eventType: "travel",
       });
-
-      console.log("이벤트 발견, EventScreen으로 이동:", activeEvent);
     }
   };
 
