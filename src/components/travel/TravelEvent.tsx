@@ -17,10 +17,10 @@ const TravelEvent: React.FC<TravelEventProps> = ({ event, onChoice }) => {
   const [eventInfo, setEventInfo] = useState<any>(null);
 
   useEffect(() => {
-    // 이벤트 ID로 실제 이벤트 정보 가져오기
-    const eventData = getEventById(event.id);
+    // 수정: event.id 대신 event.eventId 사용
+    const eventData = getEventById(event.eventId);
     setEventInfo(eventData);
-  }, [event.id]);
+  }, [event.eventId]); // 의존성 배열도 변경
 
   if (!eventInfo) {
     return (

@@ -129,55 +129,35 @@ export function startTravelReducer(state: GameState, toCityId: string, transport
 /**
  * 여행 진행 리듀서
  */
+// src/state/reducers/travelReducers.ts
 export function progressTravelReducer(state: GameState): GameState {
   if (!state.travelState) return state;
 
   const { route, currentDay, events } = state.travelState;
 
-  // 이미 마지막 날이면 여행 완료
-  if (currentDay >= route.estimatedDays) {
-    return {
-      ...state,
-      currentCityId: route.toCityId,
-      travelState: undefined, // 여행 상태 제거
-    };
-  }
-
   // 날짜 진행
   const newCurrentDay = currentDay + 1;
   const newDate = advanceDate(state.currentDate);
 
-  // 해당 날짜의 이벤트 확인
-  const todayEvents = events.filter((e) => e.day === newCurrentDay && !e.processed);
-
-  // 오늘 이벤트가 있으면 처리 필요, 없으면 계속 진행
-  if (todayEvents.length > 0) {
-    const updatedEvents = events.map((event) =>
-      event.day === newCurrentDay
-        ? { ...event, processed: true } // 이벤트 처리됨으로 표시
-        : event
-    );
-
+  // 이미 마지막 날이면 여행 완료
+  if (newCurrentDay > route.estimatedDays) {
     return {
       ...state,
-      currentDate: newDate,
-      travelState: {
-        ...state.travelState,
-        currentDay: newCurrentDay,
-        events: updatedEvents,
-      },
-    };
-  } else {
-    // 이벤트 없으면 그냥 진행
-    return {
-      ...state,
-      currentDate: newDate,
-      travelState: {
-        ...state.travelState,
-        currentDay: newCurrentDay,
-      },
+      currentCityId: route.toCityId,
+      travelState: undefined,
     };
   }
+
+  // 수정: 이벤트 상태를 변경하지 않고 날짜만 업데이트
+  return {
+    ...state,
+    currentDate: newDate,
+    travelState: {
+      ...state.travelState,
+      currentDay: newCurrentDay,
+      // events를 업데이트하지 않음 - processed 값 유지
+    },
+  };
 }
 
 /**
