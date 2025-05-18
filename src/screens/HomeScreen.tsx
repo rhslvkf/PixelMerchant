@@ -4,6 +4,7 @@ import { Animated, Dimensions, Image, ImageBackground, StyleSheet, View } from "
 import Button from "../components/Button";
 import ConfirmationModal from "../components/ConfirmationModal";
 import PixelText from "../components/PixelText";
+import SaveSlotModal from "../components/SaveSlotModal"; // 추가: SaveSlotModal 임포트
 import SettingsModal from "../components/SettingsModal";
 import { SCREENS } from "../config/constants";
 import { SPACING } from "../config/theme";
@@ -18,6 +19,7 @@ const HomeScreen = () => {
   const [hasSaveData, setHasSaveData] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showLoadModal, setShowLoadModal] = useState(false); // 추가: 로드 모달 표시 상태
   const [fadeIn] = useState(new Animated.Value(0));
   const [logoScale] = useState(new Animated.Value(0.95));
 
@@ -70,12 +72,31 @@ const HomeScreen = () => {
     navigation.navigate(SCREENS.CHARACTER_CREATION as never);
   };
 
-  // 게임 이어하기
-  const handleContinueGame = async () => {
-    const savedGame = await StorageService.loadCurrentGame();
-    if (savedGame) {
-      dispatch({ type: "LOAD_GAME", payload: { gameState: savedGame } });
-      navigation.navigate(SCREENS.CITY as never);
+  // 게임 이어하기 - 슬롯 선택 모달 표시로 변경
+  const handleContinueGame = () => {
+    setShowLoadModal(true);
+  };
+
+  // 추가: 저장 슬롯에서 게임 로드
+  const handleLoadGameFromSlot = async (slotId: string): Promise<boolean> => {
+    try {
+      // 슬롯에서 게임 로드
+      const savedGame = await StorageService.loadGameFromSlot(slotId);
+
+      if (savedGame) {
+        // 게임 상태 로드
+        dispatch({ type: "LOAD_GAME", payload: { gameState: savedGame } });
+
+        // 도시 화면으로 이동
+        navigation.navigate(SCREENS.CITY as never);
+        return true;
+      } else {
+        console.error(`슬롯 ${slotId}에서 게임을 로드할 수 없습니다.`);
+        return false;
+      }
+    } catch (error) {
+      console.error("게임 로드 중 오류 발생:", error);
+      return false;
     }
   };
 
@@ -139,11 +160,20 @@ const HomeScreen = () => {
         onConfirm={startNewGame}
         onCancel={() => setShowConfirmation(false)}
       />
+
+      {/* 저장 슬롯 선택 모달 추가 */}
+      <SaveSlotModal
+        visible={showLoadModal}
+        onClose={() => setShowLoadModal(false)}
+        onSave={handleLoadGameFromSlot}
+        isSaveMode={false}
+      />
     </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  // 스타일은 변경 없음, 기존 코드 그대로 유지
   container: {
     flex: 1,
     width: "100%",

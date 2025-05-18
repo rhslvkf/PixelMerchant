@@ -10,8 +10,8 @@ import PixelText from "./PixelText";
 enum ModalState {
   SLOT_SELECTION, // 저장 슬롯 선택 화면
   CONFIRM_OVERWRITE, // 덮어쓰기 확인 화면
-  SAVING, // 저장 중 화면
-  SAVE_COMPLETE, // 저장 완료 화면
+  PROCESSING, // 저장/로드 중 화면
+  OPERATION_COMPLETE, // 작업 완료 화면
 }
 
 interface SaveSlotModalProps {
@@ -105,8 +105,13 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
   };
 
   const handleSlotSelect = (slotId: string) => {
-    // 자동 저장 슬롯은 선택 불가
+    // 로드 모드에서는 비어있는 슬롯 선택 불가
     const slot = slots.find((s) => s.slotId === slotId);
+    if (!isSaveMode && slot?.isEmpty) {
+      return;
+    }
+
+    // 저장 모드에서는 자동 저장 슬롯 선택 불가
     if (isSaveMode && slot?.isAutoSave) {
       return;
     }
@@ -114,38 +119,36 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
     setSelectedSlot(slotId);
 
     // 저장 모드에서 이미 데이터가 있는 슬롯 선택 시 확인 모달 표시
-    if (isSaveMode) {
-      if (slot && !slot.isEmpty) {
-        setModalState(ModalState.CONFIRM_OVERWRITE);
-        return;
-      }
+    if (isSaveMode && slot && !slot.isEmpty) {
+      setModalState(ModalState.CONFIRM_OVERWRITE);
+      return;
     }
 
-    // 저장 작업 시작
-    handleSaveToSlot(slotId);
+    // 저장/로드 작업 시작
+    handleProcessSlot(slotId);
   };
 
-  // 저장 작업을 처리하는 별도의 함수
-  const handleSaveToSlot = async (slotId: string) => {
-    if (modalState === ModalState.SAVING) return; // 이미 저장 중이면 중복 실행 방지
+  // 저장/로드 작업을 처리하는 별도의 함수
+  const handleProcessSlot = async (slotId: string) => {
+    if (modalState === ModalState.PROCESSING) return; // 이미 처리 중이면 중복 실행 방지
 
-    // 저장 시작
-    setModalState(ModalState.SAVING);
+    // 처리 시작
+    setModalState(ModalState.PROCESSING);
 
     try {
       const success = await onSave(slotId);
 
-      // 저장 완료
+      // 작업 완료
       if (success) {
         const slot = slots.find((s) => s.slotId === slotId);
         setSavedSlotName(slot?.displayName || "선택한 슬롯");
-        setModalState(ModalState.SAVE_COMPLETE);
+        setModalState(ModalState.OPERATION_COMPLETE);
       } else {
-        // 저장 실패 시 슬롯 선택 화면으로 돌아감
+        // 작업 실패 시 슬롯 선택 화면으로 돌아감
         setModalState(ModalState.SLOT_SELECTION);
       }
     } catch (error) {
-      console.error("저장 중 오류 발생:", error);
+      console.error("작업 중 오류 발생:", error);
       // 오류 발생 시 슬롯 선택 화면으로 돌아감
       setModalState(ModalState.SLOT_SELECTION);
     }
@@ -153,11 +156,11 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
 
   const handleConfirmOverwrite = () => {
     if (selectedSlot) {
-      handleSaveToSlot(selectedSlot);
+      handleProcessSlot(selectedSlot);
     }
   };
 
-  // 저장 완료 후 모달 닫기
+  // 완료 후 모달 닫기
   const handleComplete = () => {
     onClose();
   };
@@ -183,11 +186,11 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
                   style={[
                     styles.slotItem,
                     slot.isAutoSave && styles.autoSlot,
-                    slot.isEmpty && isSaveMode === false && styles.disabledSlot,
+                    slot.isEmpty && !isSaveMode && styles.disabledSlot,
                     isSaveMode && slot.isAutoSave && styles.disabledSlot,
                   ]}
                   onPress={() => handleSlotSelect(slot.slotId)}
-                  disabled={(slot.isEmpty && isSaveMode === false) || (isSaveMode && slot.isAutoSave)}
+                  disabled={(slot.isEmpty && !isSaveMode) || (isSaveMode && slot.isAutoSave)}
                 >
                   {/* 슬롯 기본 정보 */}
                   <View style={styles.slotHeader}>
@@ -235,26 +238,30 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
           </>
         );
 
-      case ModalState.SAVING:
+      case ModalState.PROCESSING:
         return (
           <>
             <PixelText variant="subtitle" style={styles.title}>
-              저장 중
+              {isSaveMode ? "저장 중" : "불러오는 중"}
             </PixelText>
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={COLORS.primary} />
-              <PixelText style={styles.loadingText}>저장 중...</PixelText>
+              <PixelText style={styles.loadingText}>{isSaveMode ? "저장 중..." : "불러오는 중..."}</PixelText>
             </View>
           </>
         );
 
-      case ModalState.SAVE_COMPLETE:
+      case ModalState.OPERATION_COMPLETE:
         return (
           <>
             <PixelText variant="subtitle" style={styles.completeTitle}>
-              저장 완료
+              {isSaveMode ? "저장 완료" : "불러오기 완료"}
             </PixelText>
-            <PixelText style={styles.completeMessage}>게임이 "{savedSlotName}"에 성공적으로 저장되었습니다.</PixelText>
+            <PixelText style={styles.completeMessage}>
+              {isSaveMode
+                ? `게임이 "${savedSlotName}"에 성공적으로 저장되었습니다.`
+                : `"${savedSlotName}"에서 게임을 성공적으로 불러왔습니다.`}
+            </PixelText>
             <Button title="확인" onPress={handleComplete} style={styles.completeButton} />
           </>
         );
@@ -270,6 +277,7 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
   );
 };
 
+// 기존 스타일은 유지
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -352,7 +360,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     color: COLORS.primary,
   },
-  // 저장 완료 스타일
+  // 완료 스타일
   completeTitle: {
     textAlign: "center",
     marginBottom: SPACING.md,
