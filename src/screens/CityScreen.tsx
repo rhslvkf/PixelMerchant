@@ -6,7 +6,7 @@ import Button from "../components/Button";
 import NPCList from "../components/npc/NPCList";
 import NPCModal from "../components/npc/NPCModal";
 import PixelText from "../components/PixelText";
-import SaveSlotModal from "../components/SaveSlotModal";
+import SaveSlotModal from "../components/SaveSlotModal"; // 새로운 모달 컴포넌트 사용
 import TravelModal from "../components/TravelModal";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { CITY_IMAGES } from "../data/CityImages";
@@ -271,6 +271,7 @@ const CityScreen = () => {
         </Modal>
       )}
 
+      {/* 새 저장 슬롯 모달 컴포넌트 사용 */}
       <SaveSlotModal
         visible={showSaveModal}
         onClose={() => setShowSaveModal(false)}

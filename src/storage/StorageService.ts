@@ -109,4 +109,19 @@ export class StorageService {
       return null;
     }
   }
+
+  // 저장 슬롯의 저장 시간 조회 (새로 추가)
+  static async getSavedAtTime(slotId: string): Promise<string | null> {
+    try {
+      const key = `${STORAGE_KEYS.SAVE_SLOTS}:${slotId}`;
+      const serializedData = await AsyncStorage.getItem(key);
+      if (!serializedData) return null;
+
+      const saveData = JSON.parse(serializedData);
+      return saveData.savedAt || null;
+    } catch (error) {
+      console.error(new StorageError(`getSavedAtTime(${slotId})`, error));
+      return null;
+    }
+  }
 }

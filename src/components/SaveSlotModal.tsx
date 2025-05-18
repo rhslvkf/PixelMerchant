@@ -1,34 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import { BORDERS, COLORS, SHADOWS, SPACING } from "../config/theme";
+import { formatDate } from "../logic/DateSystem";
 import { StorageService } from "../storage/StorageService";
 import Button from "./Button";
-import ConfirmationModal from "./ConfirmationModal";
 import PixelText from "./PixelText";
+
+// 모달 상태를 나타내는 열거형
+enum ModalState {
+  SLOT_SELECTION, // 저장 슬롯 선택 화면
+  CONFIRM_OVERWRITE, // 덮어쓰기 확인 화면
+  SAVING, // 저장 중 화면
+  SAVE_COMPLETE, // 저장 완료 화면
+}
 
 interface SaveSlotModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (slotId: string) => Promise<boolean>; // Promise<boolean> 반환 타입 추가
+  onSave: (slotId: string) => Promise<boolean>;
   isSaveMode: boolean; // true: 저장 모드, false: 불러오기 모드
 }
 
 interface SaveSlotInfo {
   slotId: string;
   displayName: string;
-  savedAt: string | null;
+  playerName: string | null;
+  gameDate: string | null;
+  realSavedAt: string | null;
   isEmpty: boolean;
+  isAutoSave: boolean;
 }
 
 const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave, isSaveMode }) => {
   const [slots, setSlots] = useState<SaveSlotInfo[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // 저장 중 상태 추가
+  const [modalState, setModalState] = useState<ModalState>(ModalState.SLOT_SELECTION);
+  const [savedSlotName, setSavedSlotName] = useState("");
 
   useEffect(() => {
     if (visible) {
       loadSlotInfo();
+      setModalState(ModalState.SLOT_SELECTION);
     }
   }, [visible]);
 
@@ -38,26 +50,54 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
     const slotInfo: SaveSlotInfo[] = [];
 
     for (const slotId of slotIds) {
-      const saveData = await StorageService.loadGameFromSlot(slotId);
-      const displayName = slotId === "auto" ? "자동 저장" : `저장 슬롯 ${slotId.slice(-1)}`;
-      const isEmpty = saveData === null;
+      const isAutoSave = slotId === "auto";
+      const displayName = isAutoSave ? "자동 저장" : `저장 슬롯 ${slotId.slice(-1)}`;
 
-      let savedAtStr = null;
-      if (!isEmpty && saveData) {
-        // savedAt 정보를 문자열로 변환
+      const saveResult = await StorageService.loadGameFromSlot(slotId);
+      const isEmpty = saveResult === null;
+
+      let playerName = null;
+      let gameDate = null;
+      let realSavedAt = null;
+
+      if (!isEmpty && saveResult) {
         try {
-          const savedAt = saveData?.player?.stats?.daysPlayed || 0;
-          savedAtStr = `게임 ${savedAt}일차`;
+          // 저장된 데이터에서 정보 추출
+          const saveData = saveResult;
+
+          // 플레이어 이름
+          playerName = saveData.player?.name || null;
+
+          // 게임 내 날짜
+          if (saveData.currentDate) {
+            gameDate = formatDate(saveData.currentDate);
+          }
+
+          // 실제 저장 시간 (ISO 문자열을 가독성 있게 변환)
+          const savedAtTimestamp = await StorageService.getSavedAtTime(slotId);
+          if (savedAtTimestamp) {
+            const date = new Date(savedAtTimestamp);
+            realSavedAt = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
+              .getDate()
+              .toString()
+              .padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date
+              .getMinutes()
+              .toString()
+              .padStart(2, "0")}`;
+          }
         } catch (e) {
-          savedAtStr = "저장 정보 있음";
+          console.error(`데이터 파싱 오류: ${e}`);
         }
       }
 
       slotInfo.push({
         slotId,
         displayName,
-        savedAt: savedAtStr,
+        playerName,
+        gameDate,
+        realSavedAt,
         isEmpty,
+        isAutoSave,
       });
     }
 
@@ -65,13 +105,18 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
   };
 
   const handleSlotSelect = (slotId: string) => {
+    // 자동 저장 슬롯은 선택 불가
+    const slot = slots.find((s) => s.slotId === slotId);
+    if (isSaveMode && slot?.isAutoSave) {
+      return;
+    }
+
     setSelectedSlot(slotId);
 
     // 저장 모드에서 이미 데이터가 있는 슬롯 선택 시 확인 모달 표시
     if (isSaveMode) {
-      const slot = slots.find((s) => s.slotId === slotId);
       if (slot && !slot.isEmpty) {
-        setShowConfirmation(true);
+        setModalState(ModalState.CONFIRM_OVERWRITE);
         return;
       }
     }
@@ -82,97 +127,145 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
 
   // 저장 작업을 처리하는 별도의 함수
   const handleSaveToSlot = async (slotId: string) => {
-    if (isSaving) return; // 이미 저장 중이면 중복 실행 방지
+    if (modalState === ModalState.SAVING) return; // 이미 저장 중이면 중복 실행 방지
 
-    setIsSaving(true); // 저장 시작 표시
+    // 저장 시작
+    setModalState(ModalState.SAVING);
 
     try {
       const success = await onSave(slotId);
 
-      // 저장 완료 후 모달 닫기
+      // 저장 완료
       if (success) {
-        setShowConfirmation(false);
-        onClose();
+        const slot = slots.find((s) => s.slotId === slotId);
+        setSavedSlotName(slot?.displayName || "선택한 슬롯");
+        setModalState(ModalState.SAVE_COMPLETE);
+      } else {
+        // 저장 실패 시 슬롯 선택 화면으로 돌아감
+        setModalState(ModalState.SLOT_SELECTION);
       }
     } catch (error) {
       console.error("저장 중 오류 발생:", error);
-    } finally {
-      setIsSaving(false); // 저장 작업 완료 표시
+      // 오류 발생 시 슬롯 선택 화면으로 돌아감
+      setModalState(ModalState.SLOT_SELECTION);
     }
   };
 
   const handleConfirmOverwrite = () => {
     if (selectedSlot) {
-      // 확인 모달 먼저 닫고 저장 시작
-      setShowConfirmation(false);
       handleSaveToSlot(selectedSlot);
     }
   };
 
-  // 모든 모달 닫기
-  const handleCancelAll = () => {
-    setShowConfirmation(false);
-    setSelectedSlot(null);
+  // 저장 완료 후 모달 닫기
+  const handleComplete = () => {
     onClose();
   };
 
-  return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={handleCancelAll}>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <PixelText variant="subtitle" style={styles.title}>
-            {isSaveMode ? "게임 저장" : "저장 데이터 불러오기"}
-          </PixelText>
+  // 취소 또는 닫기
+  const handleCancel = () => {
+    onClose();
+  };
 
-          {isSaving ? (
-            // 저장 중 로딩 표시
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <PixelText style={styles.loadingText}>저장 중...</PixelText>
-            </View>
-          ) : (
+  // 현재 모달 상태에 따라 내용 렌더링
+  const renderModalContent = () => {
+    switch (modalState) {
+      case ModalState.SLOT_SELECTION:
+        return (
+          <>
+            <PixelText variant="subtitle" style={styles.title}>
+              {isSaveMode ? "게임 저장" : "저장 데이터 불러오기"}
+            </PixelText>
             <View style={styles.slotsContainer}>
               {slots.map((slot) => (
                 <TouchableOpacity
                   key={slot.slotId}
                   style={[
                     styles.slotItem,
-                    slot.slotId === "auto" && styles.autoSlot,
+                    slot.isAutoSave && styles.autoSlot,
                     slot.isEmpty && isSaveMode === false && styles.disabledSlot,
+                    isSaveMode && slot.isAutoSave && styles.disabledSlot,
                   ]}
                   onPress={() => handleSlotSelect(slot.slotId)}
-                  disabled={slot.isEmpty && isSaveMode === false}
+                  disabled={(slot.isEmpty && isSaveMode === false) || (isSaveMode && slot.isAutoSave)}
                 >
-                  <PixelText style={styles.slotName}>{slot.displayName}</PixelText>
+                  {/* 슬롯 기본 정보 */}
+                  <View style={styles.slotHeader}>
+                    <PixelText style={styles.slotName}>{slot.displayName}</PixelText>
+                    {slot.isAutoSave && <PixelText style={styles.autoSaveTag}>자동</PixelText>}
+                  </View>
+
+                  {/* 슬롯 상세 정보 */}
                   {slot.isEmpty ? (
                     <PixelText style={styles.emptyText}>비어 있음</PixelText>
                   ) : (
-                    <PixelText style={styles.savedAtText}>{slot.savedAt}</PixelText>
+                    <View style={styles.slotDetails}>
+                      {slot.playerName && (
+                        <PixelText style={styles.slotDetailText}>플레이어: {slot.playerName}</PixelText>
+                      )}
+                      {slot.gameDate && <PixelText style={styles.slotDetailText}>게임 날짜: {slot.gameDate}</PixelText>}
+                      {slot.realSavedAt && (
+                        <PixelText style={styles.savedAtText}>저장 시간: {slot.realSavedAt}</PixelText>
+                      )}
+                    </View>
                   )}
                 </TouchableOpacity>
               ))}
             </View>
-          )}
+            <Button title="취소" onPress={handleCancel} type="secondary" style={styles.cancelButton} />
+          </>
+        );
 
-          <Button
-            title="취소"
-            onPress={handleCancelAll}
-            type="secondary"
-            style={styles.cancelButton}
-            disabled={isSaving}
-          />
-        </View>
+      case ModalState.CONFIRM_OVERWRITE:
+        return (
+          <>
+            <PixelText variant="subtitle" style={styles.title}>
+              저장 덮어쓰기
+            </PixelText>
+            <PixelText style={styles.confirmMessage}>이미 저장된 데이터가 있습니다. 덮어쓰시겠습니까?</PixelText>
+            <View style={styles.buttonRow}>
+              <Button title="덮어쓰기" onPress={handleConfirmOverwrite} type="danger" style={styles.confirmButton} />
+              <Button
+                title="취소"
+                onPress={() => setModalState(ModalState.SLOT_SELECTION)}
+                type="secondary"
+                style={styles.confirmButton}
+              />
+            </View>
+          </>
+        );
+
+      case ModalState.SAVING:
+        return (
+          <>
+            <PixelText variant="subtitle" style={styles.title}>
+              저장 중
+            </PixelText>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <PixelText style={styles.loadingText}>저장 중...</PixelText>
+            </View>
+          </>
+        );
+
+      case ModalState.SAVE_COMPLETE:
+        return (
+          <>
+            <PixelText variant="subtitle" style={styles.completeTitle}>
+              저장 완료
+            </PixelText>
+            <PixelText style={styles.completeMessage}>게임이 "{savedSlotName}"에 성공적으로 저장되었습니다.</PixelText>
+            <Button title="확인" onPress={handleComplete} style={styles.completeButton} />
+          </>
+        );
+    }
+  };
+
+  return (
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={handleCancel}>
+      <View style={styles.overlay}>
+        <View style={styles.container}>{renderModalContent()}</View>
       </View>
-
-      <ConfirmationModal
-        visible={showConfirmation}
-        title="저장 덮어쓰기"
-        message="이미 저장된 데이터가 있습니다. 덮어쓰시겠습니까?"
-        confirmText="덮어쓰기"
-        cancelText="취소"
-        onConfirm={handleConfirmOverwrite}
-        onCancel={() => setShowConfirmation(false)}
-      />
     </Modal>
   );
 };
@@ -208,13 +301,28 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.primary,
+  },
+  slotHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: SPACING.xs,
+  },
+  slotDetails: {
+    marginTop: SPACING.xs,
+  },
+  slotDetailText: {
+    fontSize: 12,
+    marginBottom: 2,
   },
   autoSlot: {
     backgroundColor: COLORS.berdan,
     borderColor: COLORS.gold,
+  },
+  autoSaveTag: {
+    color: COLORS.gold,
+    fontSize: 12,
+    fontWeight: "bold",
   },
   disabledSlot: {
     opacity: 0.5,
@@ -229,6 +337,7 @@ const styles = StyleSheet.create({
   },
   savedAtText: {
     color: COLORS.info,
+    fontSize: 12,
   },
   cancelButton: {
     marginTop: SPACING.sm,
@@ -242,6 +351,33 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: SPACING.md,
     color: COLORS.primary,
+  },
+  // 저장 완료 스타일
+  completeTitle: {
+    textAlign: "center",
+    marginBottom: SPACING.md,
+    color: COLORS.success,
+  },
+  completeMessage: {
+    textAlign: "center",
+    marginBottom: SPACING.lg,
+  },
+  completeButton: {
+    minWidth: 120,
+    alignSelf: "center",
+  },
+  // 덮어쓰기 확인 스타일
+  confirmMessage: {
+    textAlign: "center",
+    marginBottom: SPACING.lg,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  confirmButton: {
+    flex: 1,
+    marginHorizontal: SPACING.xs,
   },
 });
 
