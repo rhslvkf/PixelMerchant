@@ -95,7 +95,12 @@ const reducerMap: Record<GameAction["type"], (state: GameState, action: any) => 
  */
 const autoSaveGameState = async (state: GameState): Promise<void> => {
   try {
+    // 일반 자동 저장 (현재 게임)
     await StorageService.saveCurrentGame(state);
+
+    // 자동 저장 슬롯에도 저장
+    await StorageService.saveGameToSlot(state, "auto");
+
     console.log("Game state auto-saved successfully");
   } catch (error) {
     console.error("Failed to auto-save game state:", error);

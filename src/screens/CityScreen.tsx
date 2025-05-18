@@ -16,6 +16,8 @@ import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
 import { formatRating } from "../utils/formatting";
 import { getCultureName } from "../utils/localization";
+import SaveSlotModal from "../components/SaveSlotModal";
+import { StorageService } from "../storage/StorageService";
 
 // 공통 컨테이너 스타일을 위한 상수
 const CONTAINER_BACKGROUND = `${COLORS.background.dark}B3`;
@@ -106,6 +108,7 @@ const CityScreen = () => {
   const { state, dispatch } = useGame();
   const [showTravelModal, setShowTravelModal] = useState(false);
   const [showNPCList, setShowNPCList] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const { npcsInCurrentCity, npcModalVisible, startInteraction, endInteraction } = useNPCInteraction();
 
@@ -150,6 +153,18 @@ const CityScreen = () => {
   // NPC 선택 핸들러
   const handleSelectNPC = (npcId: string) => {
     startInteraction(npcId);
+  };
+
+  const handleSaveGame = async (slotId: string) => {
+    // 현재 게임 상태 저장
+    const success = await StorageService.saveGameToSlot(state, slotId);
+    if (success) {
+      // 저장 성공 메시지 (선택 사항 - 알림 컴포넌트가 있다면 활용)
+      console.log(`게임이 "${slotId}" 슬롯에 저장되었습니다.`);
+    } else {
+      // 저장 실패 메시지
+      console.error(`저장에 실패했습니다.`);
+    }
   };
 
   // UI 렌더링
@@ -207,6 +222,13 @@ const CityScreen = () => {
         <View style={styles.footer}>
           <Button title="인벤토리" size="medium" type="secondary" onPress={goToInventory} style={styles.footerButton} />
           <Button title="여행" size="medium" onPress={toggleTravelModal} style={styles.footerButton} />
+          <Button
+            title="저장"
+            size="medium"
+            type="secondary"
+            onPress={() => setShowSaveModal(true)}
+            style={styles.footerButton}
+          />
           <Button title="캐릭터" size="medium" type="secondary" onPress={goToCharacter} style={styles.footerButton} />
         </View>
       </ImageBackground>
@@ -235,6 +257,13 @@ const CityScreen = () => {
           </View>
         </Modal>
       )}
+
+      <SaveSlotModal
+        visible={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveGame}
+        isSaveMode={true}
+      />
     </SafeAreaView>
   );
 };
