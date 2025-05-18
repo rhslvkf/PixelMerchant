@@ -1,4 +1,5 @@
 import { GameState } from "../../models/index";
+import { StorageService } from "../../storage/StorageService";
 import { GameAction } from "../types";
 import { addEventReducer, processEventChoiceReducer, progressEventReducer, removeEventReducer } from "./eventReducers";
 import { loadGameReducer, updateSettingsReducer } from "./gameReducers";
@@ -18,9 +19,7 @@ import {
   updateFactionReputationReducer,
   updateGoldReducer,
 } from "./playerReducers";
-import { acceptQuestReducer } from "./questReducers";
-import { abandonQuestReducer, completeQuestReducer } from "./questReducers";
-import { checkQuestsReducer } from "./questReducers";
+import { abandonQuestReducer, acceptQuestReducer, checkQuestsReducer, completeQuestReducer } from "./questReducers";
 import {
   completeTravelReducer,
   processTravelEventReducer,
@@ -69,7 +68,7 @@ const reducerMap: Record<GameAction["type"], (state: GameState, action: any) => 
   PROGRESS_TRAVEL: (state) => progressTravelReducer(state),
   COMPLETE_TRAVEL: (state) => completeTravelReducer(state),
   PROCESS_TRAVEL_EVENT: (state, action) =>
-    processTravelEventReducer(state, action.payload.eventId, action.payload.outcome),
+    processTravelEventReducer(state, action.payload.eventId, action.payload.choiceId),
   ADD_SKILL_EXPERIENCE: (state, action) =>
     addSkillExperienceReducer(state, action.payload.skill, action.payload.amount),
   UPDATE_FACTION_REPUTATION: (state, action) =>
@@ -92,10 +91,32 @@ const reducerMap: Record<GameAction["type"], (state: GameState, action: any) => 
 };
 
 /**
+ * 게임 상태를 자동 저장하는 함수
+ */
+const autoSaveGameState = async (state: GameState): Promise<void> => {
+  try {
+    await StorageService.saveCurrentGame(state);
+    console.log("Game state auto-saved successfully");
+  } catch (error) {
+    console.error("Failed to auto-save game state:", error);
+  }
+};
+
+/**
  * 메인 게임 리듀서
- * 각 액션 타입에 맞는 전용 리듀서 함수를 호출합니다.
+ * 각 액션 타입에 맞는 전용 리듀서 함수를 호출하고 모든 액션 후 자동 저장합니다.
  */
 export function gameReducer(state: GameState, action: GameAction): GameState {
   const reducer = reducerMap[action.type];
-  return reducer ? reducer(state, action) : state;
+  if (!reducer) return state;
+
+  // 리듀서 실행하여 새로운 상태 생성
+  const newState = reducer(state, action);
+
+  // LOAD_GAME 액션은 저장하지 않음 (불필요한 중복 저장 방지)
+  if (action.type !== "LOAD_GAME") {
+    autoSaveGameState(newState);
+  }
+
+  return newState;
 }
