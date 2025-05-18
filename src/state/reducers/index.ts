@@ -100,8 +100,6 @@ const autoSaveGameState = async (state: GameState): Promise<void> => {
 
     // 자동 저장 슬롯에도 저장
     await StorageService.saveGameToSlot(state, "auto");
-
-    console.log("Game state auto-saved successfully");
   } catch (error) {
     console.error("Failed to auto-save game state:", error);
   }

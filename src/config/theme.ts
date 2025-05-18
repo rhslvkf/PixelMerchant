@@ -57,6 +57,7 @@ export const TYPOGRAPHY = {
 
 // 여백 및 크기
 export const SPACING = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,

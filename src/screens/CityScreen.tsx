@@ -6,7 +6,8 @@ import Button from "../components/Button";
 import NPCList from "../components/npc/NPCList";
 import NPCModal from "../components/npc/NPCModal";
 import PixelText from "../components/PixelText";
-import SaveSlotModal from "../components/SaveSlotModal"; // 새로운 모달 컴포넌트 사용
+import SaveSlotModal from "../components/SaveSlotModal";
+import SettingsModal from "../components/SettingsModal";
 import TravelModal from "../components/TravelModal";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { CITY_IMAGES } from "../data/CityImages";
@@ -103,13 +104,74 @@ const PlacesGrid = React.memo(({ onMarketPress, onQuestPress }: PlacesGridProps)
   </View>
 ));
 
+// 메뉴 모달 컴포넌트 (새로 추가)
+interface GameMenuModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSaveGame: () => void;
+  onLoadGame: () => void;
+  onSettings: () => void;
+}
+
+const GameMenuModal = ({ visible, onClose, onSaveGame, onLoadGame, onSettings }: GameMenuModalProps) => {
+  return (
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.menuModalContainer}>
+          <PixelText variant="subtitle" style={styles.menuTitle}>
+            게임 메뉴
+          </PixelText>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              onSaveGame();
+            }}
+          >
+            <PixelText style={styles.menuIcon}>💾</PixelText>
+            <PixelText>저장하기</PixelText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              onLoadGame();
+            }}
+          >
+            <PixelText style={styles.menuIcon}>📂</PixelText>
+            <PixelText>불러오기</PixelText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              onSettings();
+            }}
+          >
+            <PixelText style={styles.menuIcon}>⚙️</PixelText>
+            <PixelText>설정</PixelText>
+          </TouchableOpacity>
+
+          <Button title="닫기" onPress={onClose} type="secondary" style={styles.menuCloseButton} />
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 const CityScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const { state, dispatch } = useGame();
   const [showTravelModal, setShowTravelModal] = useState(false);
   const [showNPCList, setShowNPCList] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // 저장 상태 추가
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showGameMenu, setShowGameMenu] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { npcsInCurrentCity, npcModalVisible, startInteraction, endInteraction } = useNPCInteraction();
 
@@ -156,6 +218,14 @@ const CityScreen = () => {
     startInteraction(npcId);
   };
 
+  // 메뉴 관련 핸들러
+  const openGameMenu = () => setShowGameMenu(true);
+  const closeGameMenu = () => setShowGameMenu(false);
+
+  const openSaveModal = () => setShowSaveModal(true);
+  const openLoadModal = () => setShowLoadModal(true);
+  const openSettingsModal = () => setShowSettingsModal(true);
+
   // 수정된 저장 함수 - Promise 반환
   const handleSaveGame = async (slotId: string): Promise<boolean> => {
     setIsSaving(true);
@@ -165,7 +235,6 @@ const CityScreen = () => {
       const success = await StorageService.saveGameToSlot(state, slotId);
 
       if (success) {
-        console.log(`게임이 "${slotId}" 슬롯에 저장되었습니다.`);
         return true;
       } else {
         console.error(`저장에 실패했습니다.`);
@@ -177,6 +246,33 @@ const CityScreen = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // 불러오기 함수
+  const handleLoadGame = async (slotId: string): Promise<boolean> => {
+    try {
+      const savedGame = await StorageService.loadGameFromSlot(slotId);
+
+      if (savedGame) {
+        dispatch({ type: "LOAD_GAME", payload: { gameState: savedGame } });
+        return true;
+      } else {
+        console.error(`슬롯 ${slotId}에서 게임을 로드할 수 없습니다.`);
+        return false;
+      }
+    } catch (error) {
+      console.error("게임 로드 중 오류 발생:", error);
+      return false;
+    }
+  };
+
+  // 설정 저장 핸들러
+  const handleSaveSettings = (newSettings: any) => {
+    dispatch({
+      type: "UPDATE_SETTINGS",
+      payload: { settings: newSettings },
+    });
+    setShowSettingsModal(false);
   };
 
   // UI 렌더링
@@ -193,19 +289,28 @@ const CityScreen = () => {
           </View>
 
           <View style={styles.headerRight}>
-            <View style={styles.currencyContainer}>
-              <View style={styles.currencyItem}>
-                <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
-                <PixelText style={styles.goldText}>{Math.round(state.player.gold)}</PixelText>
+            <View style={styles.headerRightContainer}>
+              <View>
+                <View style={styles.currencyContainer}>
+                  <View style={styles.currencyItem}>
+                    <Image source={require("../assets/images/gold_coin.webp")} style={styles.coinIcon} />
+                    <PixelText style={styles.goldText}>{Math.round(state.player.gold)}</PixelText>
+                  </View>
+                  <View style={styles.currencyItem}>
+                    <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
+                    <PixelText style={styles.silverText}>{Math.round((state.player.gold % 1) * 100)}</PixelText>
+                  </View>
+                </View>
+                <View style={styles.dateAndMenuContainer}>
+                  <PixelText variant="caption" style={styles.dateText}>
+                    {dateString} ({seasonName})
+                  </PixelText>
+                </View>
               </View>
-              <View style={styles.currencyItem}>
-                <Image source={require("../assets/images/silver_coin.webp")} style={styles.coinIcon} />
-                <PixelText style={styles.silverText}>{Math.round((state.player.gold % 1) * 100)}</PixelText>
+              <View>
+                <Button title="메뉴" size="medium" type="secondary" onPress={openGameMenu} style={styles.menuButton} />
               </View>
             </View>
-            <PixelText variant="caption">
-              {dateString} ({seasonName})
-            </PixelText>
           </View>
         </View>
 
@@ -230,18 +335,10 @@ const CityScreen = () => {
           <PlacesGrid onMarketPress={goToMarket} onQuestPress={goToQuest} />
         </ScrollView>
 
-        {/* 푸터 섹션 */}
+        {/* 푸터 섹션 - 저장 버튼 제거 및 레이아웃 조정 */}
         <View style={styles.footer}>
           <Button title="인벤토리" size="medium" type="secondary" onPress={goToInventory} style={styles.footerButton} />
           <Button title="여행" size="medium" onPress={toggleTravelModal} style={styles.footerButton} />
-          <Button
-            title="저장"
-            size="medium"
-            type="secondary"
-            onPress={() => setShowSaveModal(true)}
-            style={styles.footerButton}
-            disabled={isSaving} // 저장 중일 때 버튼 비활성화
-          />
           <Button title="캐릭터" size="medium" type="secondary" onPress={goToCharacter} style={styles.footerButton} />
         </View>
       </ImageBackground>
@@ -249,6 +346,38 @@ const CityScreen = () => {
       {/* 모달 */}
       <TravelModal visible={showTravelModal} onClose={toggleTravelModal} destinations={connectedCities} />
       <NPCModal visible={npcModalVisible} onClose={endInteraction} />
+
+      {/* 게임 메뉴 모달 (새로 추가) */}
+      <GameMenuModal
+        visible={showGameMenu}
+        onClose={closeGameMenu}
+        onSaveGame={openSaveModal}
+        onLoadGame={openLoadModal}
+        onSettings={openSettingsModal}
+      />
+
+      {/* 저장 & 불러오기 모달 */}
+      <SaveSlotModal
+        visible={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveGame}
+        isSaveMode={true}
+      />
+
+      <SaveSlotModal
+        visible={showLoadModal}
+        onClose={() => setShowLoadModal(false)}
+        onSave={handleLoadGame}
+        isSaveMode={false}
+      />
+
+      {/* 설정 모달 */}
+      <SettingsModal
+        visible={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        settings={state.gameSettings}
+        onSaveSettings={handleSaveSettings}
+      />
 
       {/* NPC 목록 모달 */}
       {showNPCList && (
@@ -270,14 +399,6 @@ const CityScreen = () => {
           </View>
         </Modal>
       )}
-
-      {/* 새 저장 슬롯 모달 컴포넌트 사용 */}
-      <SaveSlotModal
-        visible={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-        onSave={handleSaveGame}
-        isSaveMode={true}
-      />
     </SafeAreaView>
   );
 };
@@ -318,6 +439,12 @@ const styles = StyleSheet.create({
   headerRight: {
     flex: 1,
     alignItems: "flex-end",
+  },
+  headerRightContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: SPACING.md,
+    alignItems: "center",
   },
   cityName: {
     marginBottom: SPACING.xs,
@@ -446,6 +573,51 @@ const styles = StyleSheet.create({
   },
   npcContainer: {
     ...containerStyle,
+  },
+  dateAndMenuContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: SPACING.xs,
+  },
+  dateText: {
+    marginRight: SPACING.sm,
+  },
+  menuButton: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuModalContainer: {
+    width: "70%",
+    backgroundColor: COLORS.background.dark,
+    borderRadius: BORDERS.radius.md,
+    padding: SPACING.lg,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    ...SHADOWS.medium,
+  },
+  menuTitle: {
+    textAlign: "center",
+    marginBottom: SPACING.lg,
+    color: COLORS.primary,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: SPACING.md,
+    backgroundColor: COLORS.secondary,
+    borderRadius: BORDERS.radius.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.berdan,
+  },
+  menuIcon: {
+    fontSize: 24,
+    marginRight: SPACING.md,
+  },
+  menuCloseButton: {
+    marginTop: SPACING.xs,
   },
 });
 
