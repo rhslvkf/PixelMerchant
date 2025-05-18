@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import { BORDERS, COLORS, SHADOWS, SPACING } from "../config/theme";
 import { StorageService } from "../storage/StorageService";
 import Button from "./Button";
@@ -9,7 +9,7 @@ import PixelText from "./PixelText";
 interface SaveSlotModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (slotId: string) => void;
+  onSave: (slotId: string) => Promise<boolean>; // Promise<boolean> 반환 타입 추가
   isSaveMode: boolean; // true: 저장 모드, false: 불러오기 모드
 }
 
@@ -24,6 +24,7 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
   const [slots, setSlots] = useState<SaveSlotInfo[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // 저장 중 상태 추가
 
   useEffect(() => {
     if (visible) {
@@ -75,50 +76,91 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ visible, onClose, onSave,
       }
     }
 
-    // 아니면 바로 실행
-    onSave(slotId);
-    onClose();
+    // 저장 작업 시작
+    handleSaveToSlot(slotId);
+  };
+
+  // 저장 작업을 처리하는 별도의 함수
+  const handleSaveToSlot = async (slotId: string) => {
+    if (isSaving) return; // 이미 저장 중이면 중복 실행 방지
+
+    setIsSaving(true); // 저장 시작 표시
+
+    try {
+      const success = await onSave(slotId);
+
+      // 저장 완료 후 모달 닫기
+      if (success) {
+        setShowConfirmation(false);
+        onClose();
+      }
+    } catch (error) {
+      console.error("저장 중 오류 발생:", error);
+    } finally {
+      setIsSaving(false); // 저장 작업 완료 표시
+    }
   };
 
   const handleConfirmOverwrite = () => {
     if (selectedSlot) {
-      onSave(selectedSlot);
+      // 확인 모달 먼저 닫고 저장 시작
       setShowConfirmation(false);
-      onClose();
+      handleSaveToSlot(selectedSlot);
     }
   };
 
+  // 모든 모달 닫기
+  const handleCancelAll = () => {
+    setShowConfirmation(false);
+    setSelectedSlot(null);
+    onClose();
+  };
+
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={handleCancelAll}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <PixelText variant="subtitle" style={styles.title}>
             {isSaveMode ? "게임 저장" : "저장 데이터 불러오기"}
           </PixelText>
 
-          <View style={styles.slotsContainer}>
-            {slots.map((slot) => (
-              <TouchableOpacity
-                key={slot.slotId}
-                style={[
-                  styles.slotItem,
-                  slot.slotId === "auto" && styles.autoSlot,
-                  slot.isEmpty && isSaveMode === false && styles.disabledSlot,
-                ]}
-                onPress={() => handleSlotSelect(slot.slotId)}
-                disabled={slot.isEmpty && isSaveMode === false}
-              >
-                <PixelText style={styles.slotName}>{slot.displayName}</PixelText>
-                {slot.isEmpty ? (
-                  <PixelText style={styles.emptyText}>비어 있음</PixelText>
-                ) : (
-                  <PixelText style={styles.savedAtText}>{slot.savedAt}</PixelText>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+          {isSaving ? (
+            // 저장 중 로딩 표시
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <PixelText style={styles.loadingText}>저장 중...</PixelText>
+            </View>
+          ) : (
+            <View style={styles.slotsContainer}>
+              {slots.map((slot) => (
+                <TouchableOpacity
+                  key={slot.slotId}
+                  style={[
+                    styles.slotItem,
+                    slot.slotId === "auto" && styles.autoSlot,
+                    slot.isEmpty && isSaveMode === false && styles.disabledSlot,
+                  ]}
+                  onPress={() => handleSlotSelect(slot.slotId)}
+                  disabled={slot.isEmpty && isSaveMode === false}
+                >
+                  <PixelText style={styles.slotName}>{slot.displayName}</PixelText>
+                  {slot.isEmpty ? (
+                    <PixelText style={styles.emptyText}>비어 있음</PixelText>
+                  ) : (
+                    <PixelText style={styles.savedAtText}>{slot.savedAt}</PixelText>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
-          <Button title="취소" onPress={onClose} type="secondary" style={styles.cancelButton} />
+          <Button
+            title="취소"
+            onPress={handleCancelAll}
+            type="secondary"
+            style={styles.cancelButton}
+            disabled={isSaving}
+          />
         </View>
       </View>
 
@@ -190,6 +232,16 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     marginTop: SPACING.sm,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
+  loadingText: {
+    marginTop: SPACING.md,
+    color: COLORS.primary,
   },
 });
 

@@ -6,6 +6,7 @@ import Button from "../components/Button";
 import NPCList from "../components/npc/NPCList";
 import NPCModal from "../components/npc/NPCModal";
 import PixelText from "../components/PixelText";
+import SaveSlotModal from "../components/SaveSlotModal";
 import TravelModal from "../components/TravelModal";
 import { BORDERS, COLORS, SHADOWS, SPACING, TYPOGRAPHY } from "../config/theme";
 import { CITY_IMAGES } from "../data/CityImages";
@@ -14,10 +15,9 @@ import { useNPCInteraction } from "../hooks/useNPCInteraction";
 import { formatDate, getSeasonName } from "../logic/DateSystem";
 import { AppNavigationProp } from "../navigation/types";
 import { useGame } from "../state/GameContext";
+import { StorageService } from "../storage/StorageService";
 import { formatRating } from "../utils/formatting";
 import { getCultureName } from "../utils/localization";
-import SaveSlotModal from "../components/SaveSlotModal";
-import { StorageService } from "../storage/StorageService";
 
 // 공통 컨테이너 스타일을 위한 상수
 const CONTAINER_BACKGROUND = `${COLORS.background.dark}B3`;
@@ -109,6 +109,7 @@ const CityScreen = () => {
   const [showTravelModal, setShowTravelModal] = useState(false);
   const [showNPCList, setShowNPCList] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // 저장 상태 추가
 
   const { npcsInCurrentCity, npcModalVisible, startInteraction, endInteraction } = useNPCInteraction();
 
@@ -155,15 +156,26 @@ const CityScreen = () => {
     startInteraction(npcId);
   };
 
-  const handleSaveGame = async (slotId: string) => {
-    // 현재 게임 상태 저장
-    const success = await StorageService.saveGameToSlot(state, slotId);
-    if (success) {
-      // 저장 성공 메시지 (선택 사항 - 알림 컴포넌트가 있다면 활용)
-      console.log(`게임이 "${slotId}" 슬롯에 저장되었습니다.`);
-    } else {
-      // 저장 실패 메시지
-      console.error(`저장에 실패했습니다.`);
+  // 수정된 저장 함수 - Promise 반환
+  const handleSaveGame = async (slotId: string): Promise<boolean> => {
+    setIsSaving(true);
+
+    try {
+      // 현재 게임 상태 저장
+      const success = await StorageService.saveGameToSlot(state, slotId);
+
+      if (success) {
+        console.log(`게임이 "${slotId}" 슬롯에 저장되었습니다.`);
+        return true;
+      } else {
+        console.error(`저장에 실패했습니다.`);
+        return false;
+      }
+    } catch (error) {
+      console.error("저장 중 오류 발생:", error);
+      return false;
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -228,6 +240,7 @@ const CityScreen = () => {
             type="secondary"
             onPress={() => setShowSaveModal(true)}
             style={styles.footerButton}
+            disabled={isSaving} // 저장 중일 때 버튼 비활성화
           />
           <Button title="캐릭터" size="medium" type="secondary" onPress={goToCharacter} style={styles.footerButton} />
         </View>
